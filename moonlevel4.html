@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Moon Clustered Pods Base — Level 4</title>
+ <style>
+    :root{--bg:#0b1020;--card:#0f1724;--accent:#60a5fa;--muted:#94a3b8;--good:#10b981;--bad:#ef4444}
+    html,body{height:100%;margin:0;font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;color:#e6eef8;background:linear-gradient(180deg,#030416 0%, #07102a 60%);}
+    .app{display:grid;grid-template-columns:320px 1fr 340px;gap:18px;padding:20px;height:100vh;box-sizing:border-box}
+
+    /* LEFT SIDEBAR */
+    .sidebar{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:16px;border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,0.6);overflow:auto}
+    .sidebar h2{margin:0 0 12px 0;font-size:18px}
+    .module{background:rgba(255,255,255,0.03);padding:10px;border-radius:8px;margin-bottom:10px;display:flex;align-items:center;gap:10px;cursor:grab;border:1px dashed rgba(255,255,255,0.03)}
+    .module:active{cursor:grabbing}
+    .module .tag{font-size:13px;padding:6px 8px;border-radius:6px;background:rgba(255,255,255,0.03)}
+    .muted{color:var(--muted);font-size:13px}
+
+    /* CENTER: HABITAT */
+    .stage{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+    .viewport{width:760px;height:560px;background:radial-gradient(circle at 20% 15%, rgba(96,165,250,0.04), transparent 10%), linear-gradient(180deg,#07132b,#021220);border-radius:14px;padding:18px;box-shadow:0 12px 30px rgba(2,6,23,0.6);position:relative;display:flex;align-items:center;justify-content:center}
+
+    .hud{position:absolute;left:18px;top:18px;color:var(--muted);font-size:13px}
+    .hud .rules{max-width:300px}
+
+    /* RIGHT: INFO PANEL */
+    .info{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:16px;border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,0.6);display:flex;flex-direction:column;gap:10px}
+    .info h3{margin:0}
+    .log{background:rgba(0,0,0,0.2);padding:10px;border-radius:8px;height:220px;overflow:auto;color:#d7e7ff}
+    .status{display:flex;gap:10px;flex-wrap:wrap}
+    .pill{padding:8px 10px;border-radius:999px;background:rgba(255,255,255,0.03);font-size:13px}
+
+    /* dropzone visuals */
+    .dropzone{stroke:rgba(255,255,255,0.06);fill:transparent;cursor:pointer}
+    .dropzone.hover{stroke:rgba(96,165,250,0.9);fill:rgba(96,165,250,0.04)}
+
+    .placed{font-size:13px;margin-top:6px;color:#dbeafe}
+    .module.small{font-size:13px;padding:6px}
+
+    .result{padding:10px;border-radius:8px}
+    .good{background:linear-gradient(90deg, rgba(16,185,129,0.12), rgba(16,185,129,0.04));border:1px solid rgba(16,185,129,0.12);color:var(--good)}
+    .bad{background:linear-gradient(90deg, rgba(239,68,68,0.06), rgba(239,68,68,0.02));border:1px solid rgba(239,68,68,0.06);color:var(--bad)}
+
+    .btn{padding:8px 12px;border-radius:8px;background:var(--accent);border:none;color:#041124;font-weight:600;cursor:pointer}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:#cfe8ff}
+
+    footer{position:absolute;right:20px;bottom:20px;color:var(--muted);font-size:12px}
+
+    @media (max-width:1100px){.app{grid-template-columns:240px 1fr;grid-auto-rows:1fr} .info{display:none}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <h2>Pods — drag to place</h2>
+      <div id="modules"></div>
+      <div style="margin-top:12px" class="muted">
+        Tip: drag pods to their correct zones.
+      </div>
+    </aside>
+
+    <main class="stage">
+      <div class="viewport">
+        <div class="hud">
+          <div><strong>Moon Clustered Pods Base — Level 4</strong></div>
+          <div class="rules muted">Multiple connected pods. Hub connects all pods; Airlock first, then Life Support & others.</div>
+        </div>
+        <svg id="habitatSvg" width="620" height="520" viewBox="0 0 620 520" xmlns="http://www.w3.org/2000/svg">
+          <!-- Example Pod Zones -->
+          <circle id="hubPod" class="dropzone" cx="310" cy="260" r="50"/>
+          <circle id="airlockPod" class="dropzone" cx="160" cy="260" r="40"/>
+          <circle id="lifePod" class="dropzone" cx="310" cy="120" r="40"/>
+          <circle id="powerPod" class="dropzone" cx="460" cy="120" r="40"/>
+          <circle id="crewPod1" class="dropzone" cx="160" cy="400" r="35"/>
+          <circle id="crewPod2" class="dropzone" cx="460" cy="400" r="35"/>
+          <circle id="medPod" class="dropzone" cx="310" cy="400" r="30"/>
+          <circle id="foodPod" class="dropzone" cx="100" cy="300" r="30"/>
+          <circle id="greenhousePod" class="dropzone" cx="520" cy="300" r="30"/>
+          <circle id="exercisePod" class="dropzone" cx="310" cy="480" r="25"/>
+          <circle id="cargoPod" class="dropzone" cx="50" cy="100" r="25"/>
+        </svg>
+      </div>
+      <div style="width:760px;display:flex;justify-content:space-between;align-items:center">
+        <div class="status">
+          <div class="pill">Goal: Place all pods correctly & connected</div>
+          <div class="pill">Constraint: Hub first, connections respected</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn" id="checkBtn">Check Level</button>
+          <button class="btn ghost" id="resetBtn">Reset</button>
+        </div>
+      </div>
+    </main>
+
+    <aside class="info">
+      <h3>Placement Log</h3>
+      <div class="log" id="log"></div>
+      <h3>Pod Status</h3>
+      <div id="placedList" class="placed"></div>
+      <h3>Level Result</h3>
+      <div id="resultBox" class="result">Not checked yet.</div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn ghost" id="hintBtn">Show Placement Hints</button>
+        <button class="btn" id="completionTextBtn">Show Completion Text</button>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+  const PODS=[
+    {id:'hubPod',name:'Hub Pod',allowed:['hubPod'],required:true,connectsTo:['airlockPod','lifePod','powerPod','crewPod1','crewPod2','medPod','foodPod','greenhousePod','exercisePod','cargoPod']},
+    {id:'airlockPod',name:'Airlock Pod',allowed:['airlockPod'],required:true,connectsTo:['hubPod']},
+    {id:'lifePod',name:'Life Support Pod',allowed:['lifePod'],required:true,connectsTo:['hubPod']},
+    {id:'powerPod',name:'Power Pod',allowed:['powerPod'],required:true,connectsTo:['hubPod','lifePod']},
+    {id:'crewPod1',name:'Crew Quarters Pod 1',allowed:['crewPod1'],required:true,connectsTo:['hubPod']},
+    {id:'crewPod2',name:'Crew Quarters Pod 2',allowed:['crewPod2'],required:true,connectsTo:['hubPod']},
+    {id:'medPod',name:'Medical Pod',allowed:['medPod'],required:true,connectsTo:['hubPod','lifePod']},
+    {id:'foodPod',name:'Food Pod',allowed:['foodPod'],required:true,connectsTo:['crewPod1','greenhousePod']},
+    {id:'greenhousePod',name:'Greenhouse Pod',allowed:['greenhousePod'],required:true,connectsTo:['lifePod','foodPod']},
+    {id:'exercisePod',name:'Exercise Pod',allowed:['exercisePod'],required:true,connectsTo:['medPod']},
+    {id:'cargoPod',name:'Cargo / Stowage Pod',allowed:['cargoPod'],required:true,connectsTo:['airlockPod','hubPod']}
+  ];
+
+  const REQUIRED=PODS.map(p=>p.id);
+  const placements={};
+  const modulesContainer=document.getElementById('modules');
+  const logEl=document.getElementById('log');
+  const placedList=document.getElementById('placedList');
+  const resultBox=document.getElementById('resultBox');
+  const zoneElements=PODS.reduce((obj,p)=>{obj[p.id]=document.getElementById(p.id); return obj;},{});
+
+  PODS.forEach(p=>{
+    const div=document.createElement('div');
+    div.className='module'; div.draggable=true; div.id='mod-'+p.id;
+    div.innerHTML=`<div style="flex:1"><strong>${p.name}</strong></div>`;
+    div.addEventListener('dragstart',e=>e.dataTransfer.setData('text/plain',p.id));
+    modulesContainer.appendChild(div);
+  });
+
+  Object.entries(zoneElements).forEach(([zone,el])=>{
+    el.addEventListener('dragover',e=>{e.preventDefault(); el.classList.add('hover');});
+    el.addEventListener('dragleave',e=>{el.classList.remove('hover');});
+    el.addEventListener('drop',e=>{
+      e.preventDefault(); el.classList.remove('hover');
+      const podId=e.dataTransfer.getData('text/plain'); if(!podId) return; placePod(podId,zone);
+    });
+  });
+
+  function log(msg){const p=document.createElement('div');p.textContent='· '+msg; logEl.prepend(p);}
+  function updatePlacedList(){placedList.innerHTML=''; for(const [pid,zone] of Object.entries(placements)){const pod=PODS.find(p=>p.id===pid);const d=document.createElement('div');d.className='module small';d.textContent=`${pod.name} — ${zone}`;placedList.appendChild(d);} if(!Object.keys(placements).length) placedList.textContent='No pods placed yet.';}
+
+  function placePod(pid,zone){placements[pid]=zone; log(`${PODS.find(p=>p.id===pid).name} placed in ${zone}`); renderPlacements(); updatePlacedList();}
+
+  function renderPlacements(){
+    const svg=document.getElementById('habitatSvg');
+    [...svg.querySelectorAll('[data-placed]')].forEach(n=>n.remove());
+    for(const [pid,zone] of Object.entries(placements)){
+      const el=zoneElements[zone];
+      const g=document.createElementNS('http://www.w3.org/2000/svg','g'); 
+      const cx=el.cx.baseVal.value, cy=el.cy.baseVal.value, r=el.r.baseVal.value;
+      g.setAttribute('transform',`translate(${cx-r/2},${cy-r/2})`); g.setAttribute('data-placed',pid);
+      const circle=document.createElementNS('http://www.w3.org/2000/svg','circle'); circle.setAttribute('cx',r/2); circle.setAttribute('cy',r/2); circle.setAttribute('r',r/2); circle.setAttribute('fill','#60a5fa');
+      const text=document.createElementNS('http://www.w3.org/2000/svg','text'); text.setAttribute('x',r/2); text.setAttribute('y',r/2+4); text.setAttribute('text-anchor','middle'); text.setAttribute('font-size',10); text.setAttribute('fill','#041124'); text.textContent=pid.toUpperCase();
+      g.appendChild(circle); g.appendChild(text); svg.appendChild(g);
+      g.addEventListener('click',()=>{ delete placements[pid]; log(`${PODS.find(p=>p.id===pid).name} removed.`); renderPlacements(); updatePlacedList(); });
+    }
+  }
+
+  document.getElementById('resetBtn').addEventListener('click',()=>{
+    for(const k of Object.keys(placements)) delete placements[k];
+    renderPlacements(); updatePlacedList(); log('Level reset.'); resultBox.className='result'; resultBox.textContent='Not checked yet.';
+  });
+
+  document.getElementById('checkBtn').addEventListener('click',()=>{
+    const check=evaluateLevel();
+    if(check.ok){ resultBox.className='result good'; resultBox.textContent='✅ Clustered Pods network stabilized!'; log('Level PASSED.'); }
+    else{ resultBox.className='result bad'; resultBox.textContent='⚠ Placement issues: '+check.messages.join('; '); log('Level FAILED'); }
+  });
+
+  document.getElementById('hintBtn').addEventListener('click',()=>{alert('Hints:\n'+PODS.map(p=>`• ${p.name}: allowed in ${p.allowed.join(', ')}`).join('\n'));});
+  document.getElementById('completionTextBtn').addEventListener('click',()=>{
+    alert(`Clustered Pods Base ready! Correct placement ensures survival & mission efficiency.
+• Thermal & Pressure stable 22°C & 101 kPa
+• Life Support feeds all pods
+• Power Pod ensures solar + nuclear backup
+• Food & Greenhouse maintain nutrition & O₂
+• Crew Quarters maintain rest & low stress
+• Exercise Pod prevents bone/muscle loss
+• Medical Pod ensures rapid emergency response
+• Waste Pods isolated from food & greenhouse
+• Communications Hub to Earth
+• Hub Pod & tunnels enable pressurized access
+Result: Astronauts can safely survive 6–12 month missions on Moon.`);
+  });
+
+  function evaluateLevel(){
+    const messages=[]; let ok=true;
+    const missing=REQUIRED.filter(r=>!placements[r]); if(missing.length){ok=false; messages.push(`Missing pods: ${missing.join(', ')}`);}
+    // Connection check
+    for(const pid of Object.keys(placements)){
+      const pod=PODS.find(p=>p.id===pid);
+      if(pid==='airlockPod' && placements['hubPod']===undefined){ok=false; messages.push('Airlock must connect to Hub first');}
+      for(const conn of pod.connectsTo){
+        if(placements[conn]===undefined){ok=false; messages.push(`${pod.name} not connected to ${PODS.find(p=>p.id===conn).name}`);}
+      }
+    }
+    return {ok,messages};
+  }
+
+  renderPlacements(); updatePlacedList(); log('Level 4 loaded. Drag pods into networked zones.');
+  </script>
+</body>
+</html

@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Space Mars Levels</title>
+  <style>
+    /* Reset & full-screen setup */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: url('https://tse2.mm.bing.net/th/id/OIP.hvHD900qKvXhbUcdQnTIdQHaEK?cb=12&rs=1&pid=ImgDetMain&o=7&rm=3') center center no-repeat;
+      background-size: cover;
+      font-family: Arial, sans-serif;
+    }
+
+    /* Starfield canvas */
+    #starfield {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    /* Mars container */
+    .mars {
+      position: absolute;
+      top: 55%;
+      left: 50%;
+      width: 550px;
+      height: 550px;
+      transform: translate(-50%, -45%);
+      background: url('https://upload.wikimedia.org/wikipedia/commons/0/02/OSIRIS_Mars_true_color.jpg') center center no-repeat;
+      background-size: cover;
+      border-radius: 50%;
+      box-shadow: 0 0 30px rgba(255, 100, 0, 0.6);
+      overflow: visible; 
+      z-index: 2;
+      position: relative;
+    }
+
+    /* Level buttons (Mars glow style) */
+    .level {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Orbitron', sans-serif;
+      color: #ffb347;
+      cursor: pointer;
+      z-index: 10;
+      font-weight: bold;
+      background: linear-gradient(90deg, #3b1d00, #5c2600);
+      border: 2px solid #ff6a00;
+      box-shadow: 0 0 15px rgba(255, 100, 0, 0.6), 0 0 30px rgba(255, 80, 0, 0.4);
+      transition: all 0.3s ease-in-out;
+      overflow: hidden;
+      text-align: center;
+    }
+
+    /* Shimmer effect */
+    .level::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(120deg, transparent, rgba(255,165,0,0.3), transparent);
+      transition: all 0.6s ease-in-out;
+      border-radius: 50%;
+    }
+
+    .level:hover::before {
+      left: 100%;
+    }
+
+    .level:hover {
+      color: #fff;
+      background: linear-gradient(90deg, #ff6a00, #ff9a00);
+      box-shadow: 0 0 20px #ff6a00, 0 0 40px #ff9a00, 0 0 60px #ff6a00;
+      transform: scale(1.2);
+    }
+
+    /* Level description text */
+    .level-text {
+      position: absolute;
+      width: 160px;
+      font-size: 12px;
+      color: #fff3e0;
+      text-align: center;
+      pointer-events: none;
+      font-family: sans-serif;
+      font-weight: 600;
+      text-shadow: 0 0 8px rgba(255, 150, 50, 0.6);
+    }
+
+    /* Dust spot style */
+    .dust {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 150, 50, 0.1);
+      pointer-events: none;
+    }
+    .planet-title {
+  position: absolute;
+  top: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 60px;
+  font-weight: 900;
+  color: #ffb347;
+  letter-spacing: 5px;
+  text-shadow: 0 0 20px rgba(255, 100, 0, 0.9), 0 0 40px rgba(255, 70, 0, 0.6);
+  z-index: 3;
+  font-family: 'Orbitron', sans-serif;
+}
+.key-btn {
+      position: absolute;
+      bottom: 140px; /* not too low */
+      right: 80px;   /* from right edge */
+      padding: 15px 40px;
+      font-size: 20px;
+      font-weight: bold;
+      color: #ffb347;
+      background: transparent;
+      border: 2px solid #ffb347;
+      border-radius: 50px;
+      cursor: pointer;
+      font-family: 'Orbitron', sans-serif;
+      box-shadow: 0 0 15px rgba(255, 150, 50, 0.6), 0 0 30px rgba(255, 120, 0, 0.4);
+      transition: all 0.3s ease-in-out;
+      z-index: 5;
+      text-decoration: none;
+    }
+
+    .key-btn:hover {
+      background: #5c2600;
+      color: #fff;
+      box-shadow: 0 0 20px #ff6a00, 0 0 40px #ff9a00, 0 0 60px #ff6a00;
+      transform: scale(1.1);
+    }
+  </style>
+</head>
+<body>
+    <div class="planet-title">MARS</div>
+
+  <canvas id="starfield"></canvas>
+  <div class="mars" id="mars">
+  <!-- Level 1 -->
+  <a href="mlevel1.html" class="level" data-level="1">1</a>
+  <div class="level-text" data-level="1">Cylinder</div>
+
+  <!-- Level 2 -->
+  <a href="mlevel2.html" class="level" data-level="2">2</a>
+  <div class="level-text" data-level="2">Dome</div>
+
+  <!-- Level 3 -->
+  <a href="mlevel3.html" class="level" data-level="3">3</a>
+  <div class="level-text" data-level="3">Vault / Arch</div>
+
+  <!-- Level 4 -->
+  <a href="mlevel4.html" class="level" data-level="4">4</a>
+  <div class="level-text" data-level="4">Clustered Pods</div>
+
+  <!-- Level 5 -->
+  <a href="mlevel5.html" class="level" data-level="5">5</a>
+  <div class="level-text" data-level="5">Lava Tube</div>
+
+
+</div>
+
+<a href="marskeyanswers.html" class="key-btn">Key Answers</a>
+  <script>
+    // STARFIELD SETUP
+    const canvas = document.getElementById('starfield');
+    const ctx = canvas.getContext('2d');
+    let stars = [];
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      stars = [];
+      for (let i = 0; i < 300; i++) {
+        stars.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          radius: Math.random() * 1.2 + 0.3,
+          alpha: Math.random(),
+          dAlpha: (Math.random() * 0.02) * (Math.random() < 0.5 ? 1 : -1)
+        });
+      }
+    }
+
+    function drawStars() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      stars.forEach(s => {
+        s.alpha += s.dAlpha;
+        if (s.alpha <= 0 || s.alpha >= 1) s.dAlpha *= -1;
+        ctx.globalAlpha = s.alpha;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
+        ctx.fillStyle = '#fff';
+        ctx.fill();
+      });
+      requestAnimationFrame(drawStars);
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+    drawStars();
+
+    // POSITION LEVEL BUTTONS AND TEXT AROUND MARS
+    const mars = document.getElementById('mars');
+    const levels = mars.querySelectorAll('.level');
+    const levelTexts = mars.querySelectorAll('.level-text');
+
+    function placeLevels() {
+      const rect = mars.getBoundingClientRect();
+      const cx = rect.width / 2;
+      const cy = rect.height / 2;
+      const r = rect.width / 2 - 60;
+
+      levels.forEach((el, i) => {
+        const angle = (Math.PI * 2 / levels.length) * i - Math.PI / 2;
+        const x = cx + r * Math.cos(angle) - el.offsetWidth / 2;
+        const y = cy + r * Math.sin(angle) - el.offsetHeight / 2;
+        el.style.left = x + 'px';
+        el.style.top = y + 'px';
+
+        const textEl = levelTexts[i];
+        textEl.style.left = x - 45 + 'px';
+        textEl.style.top = (y + el.offsetHeight + 10) + 'px';
+
+        
+      });
+    }
+
+    window.addEventListener('load', placeLevels);
+
+    // GENERATE MARS DUST SPOTS
+    function generateDust(marsEl, count = 25) {
+      const { width, height } = marsEl.getBoundingClientRect();
+      const cx = width / 2;
+      const cy = height / 2;
+      const r = width / 2;
+
+      for (let i = 0; i < count; i++) {
+        const size = (Math.random() * 0.1 + 0.03) * width;
+        const angle = Math.random() * Math.PI * 2;
+        const dist  = Math.random() * (r - size / 2);
+
+        const dust = document.createElement("div");
+        dust.classList.add("dust");
+        dust.style.width  = size + "px";
+        dust.style.height = size + "px";
+        dust.style.left   = (cx + dist * Math.cos(angle) - size/2) + "px";
+        dust.style.top    = (cy + dist * Math.sin(angle) - size/2) + "px";
+        marsEl.appendChild(dust);
+      }
+    }
+
+    window.addEventListener("load", () => {
+      const marsEl = document.getElementById("mars");
+      generateDust(marsEl, 25);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mars Vault / Arch Habitat — Level 3</title>
+  <style>
+    :root{--bg:#0b1020;--card:#0f1724;--accent:#60a5fa;--muted:#94a3b8;--good:#10b981;--bad:#ef4444}
+    html,body{height:100%;margin:0;font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;color:#e6eef8;background:linear-gradient(180deg,#030416 0%, #07102a 60%);}
+    .app{display:grid;grid-template-columns:320px 1fr 340px;gap:18px;padding:20px;height:100vh;box-sizing:border-box}
+
+    /* LEFT SIDEBAR */
+    .sidebar{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:16px;border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,0.6);overflow:auto}
+    .sidebar h2{margin:0 0 12px 0;font-size:18px}
+    .module{background:rgba(255,255,255,0.03);padding:10px;border-radius:8px;margin-bottom:10px;display:flex;align-items:center;gap:10px;cursor:grab;border:1px dashed rgba(255,255,255,0.03)}
+    .module:active{cursor:grabbing}
+    .module .tag{font-size:13px;padding:6px 8px;border-radius:6px;background:rgba(255,255,255,0.03)}
+    .muted{color:var(--muted);font-size:13px}
+
+    /* CENTER: HABITAT */
+    .stage{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+    .viewport{width:760px;height:560px;background:radial-gradient(circle at 20% 15%, rgba(96,165,250,0.04), transparent 10%), linear-gradient(180deg,#07132b,#021220);border-radius:14px;padding:18px;box-shadow:0 12px 30px rgba(2,6,23,0.6);position:relative;display:flex;align-items:center;justify-content:center}
+
+    .hud{position:absolute;left:18px;top:18px;color:var(--muted);font-size:13px}
+    .hud .rules{max-width:300px}
+
+    /* RIGHT: INFO PANEL */
+    .info{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:16px;border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,0.6);display:flex;flex-direction:column;gap:10px}
+    .info h3{margin:0}
+    .log{background:rgba(0,0,0,0.2);padding:10px;border-radius:8px;height:220px;overflow:auto;color:#d7e7ff}
+    .status{display:flex;gap:10px;flex-wrap:wrap}
+    .pill{padding:8px 10px;border-radius:999px;background:rgba(255,255,255,0.03);font-size:13px}
+
+    /* dropzone visuals */
+    .dropzone{stroke:rgba(255,255,255,0.06);fill:transparent;cursor:pointer}
+    .dropzone.hover{stroke:rgba(96,165,250,0.9);fill:rgba(96,165,250,0.04)}
+
+    .placed{font-size:13px;margin-top:6px;color:#dbeafe}
+    .module.small{font-size:13px;padding:6px}
+
+    .result{padding:10px;border-radius:8px}
+    .good{background:linear-gradient(90deg, rgba(16,185,129,0.12), rgba(16,185,129,0.04));border:1px solid rgba(16,185,129,0.12);color:var(--good)}
+    .bad{background:linear-gradient(90deg, rgba(239,68,68,0.06), rgba(239,68,68,0.02));border:1px solid rgba(239,68,68,0.06);color:var(--bad)}
+
+    .btn{padding:8px 12px;border-radius:8px;background:var(--accent);border:none;color:#041124;font-weight:600;cursor:pointer}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:#cfe8ff}
+
+    footer{position:absolute;right:20px;bottom:20px;color:var(--muted);font-size:12px}
+
+    @media (max-width:1100px){.app{grid-template-columns:240px 1fr;grid-auto-rows:1fr} .info{display:none}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <h2>Modules — drag to place</h2>
+      <div id="modules"></div>
+      <div style="margin-top:12px" class="muted">Tip: Airlock must be at a vault end. Put Life Support in core. Click placed icons to remove them.</div>
+    </aside>
+
+    <main class="stage">
+      <div class="viewport">
+        <div class="hud">
+          <div><strong>Mars Vault / Arch Habitat — Level 3</strong></div>
+          <div class="muted" style="max-width:360px">Segmented vault: place modules into compartments. Rules: airlock at one end, Life Support central, Power adjacent, Medical near Life/Power, Waste near airlock & away from food/greenhouse.</div>
+        </div>
+
+        <!-- Vault SVG: left end = airlockZone, crewZone1, coreZone (center), crewZone2, outerZone (right end) -->
+        <svg id="habitatSvg" width="760" height="520" viewBox="0 0 760 520" xmlns="http://www.w3.org/2000/svg">
+          <!-- Vault background -->
+          <rect x="40" y="60" width="680" height="400" rx="80" ry="80" fill="rgba(255,255,255,0.01)" stroke="rgba(255,255,255,0.02)"/>
+          <!-- Zones -->
+          <rect id="airlockZone" class="dropzone" x="60" y="140" width="120" height="240" rx="28" ry="28" stroke-width="4"/>
+          <rect id="crewZone1" class="dropzone" x="200" y="120" width="140" height="280" rx="28" ry="28" stroke-width="4"/>
+          <rect id="coreZone" class="dropzone" x="360" y="110" width="160" height="300" rx="32" ry="32" stroke-width="5"/>
+          <rect id="crewZone2" class="dropzone" x="540" y="120" width="140" height="280" rx="28" ry="28" stroke-width="4"/>
+          <rect id="outerZone" class="dropzone" x="700" y="140" width="30" height="240" rx="12" ry="12" stroke-width="4"/>
+
+          <text x="380" y="90" font-size="18" text-anchor="middle" fill="#cfe8ff">Vault cross-section — drop modules into compartments</text>
+          <text x="120" y="130" font-size="12" fill="#cfe8ff" text-anchor="middle">Airlock End</text>
+          <text x="270" y="110" font-size="12" fill="#cfe8ff" text-anchor="middle">Crew</text>
+          <text x="440" y="100" font-size="12" fill="#cfe8ff" text-anchor="middle">Core</text>
+          <text x="610" y="110" font-size="12" fill="#cfe8ff" text-anchor="middle">Crew</text>
+          <text x="716" y="130" font-size="12" fill="#cfe8ff" text-anchor="middle">Outer</text>
+        </svg>
+
+      </div>
+
+      <div style="width:760px;display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+        <div class="status">
+          <div class="pill">Goal: Place required modules to stabilize vault</div>
+          <div class="pill">Constraint: respect proximity & isolation rules</div>
+        </div>
+
+        <div style="display:flex;gap:8px">
+          <button class="pill" id="checkBtn" style="cursor:pointer;background:var(--accent);border-radius:8px;padding:8px 12px;color:#041124;font-weight:700">Check Level</button>
+          <button class="pill" id="resetBtn" style="cursor:pointer;border-radius:8px;padding:8px 12px;background:transparent;border:1px solid rgba(255,255,255,0.04);">Reset</button>
+        </div>
+      </div>
+    </main>
+
+    <aside class="info">
+      <h3>Placement Log</h3>
+      <div class="log" id="log"></div>
+
+      <h3>Module Status</h3>
+      <div id="placedList" class="placed"></div>
+
+      <h3>Level Result</h3>
+      <div id="resultBox" class="result">Not checked yet.</div>
+
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="pill" id="hintBtn" style="cursor:pointer;background:transparent;border:1px solid rgba(255,255,255,0.04);">Show Placement Hints</button>
+        <button class="pill" id="completionTextBtn" style="cursor:pointer;background:transparent;border:1px solid rgba(255,255,255,0.04);">Show Completion Text</button>
+      </div>
+    </aside>
+  </div>
+
+  <footer>Interactive level simulation — Mars Vault / Arch Habitat Level 3</footer>
+
+  <script>
+    /* Modules & rules for Mars Level 3 */
+    const MODULES = [
+      { id:'airlock', name:'Airlock + EVA Prep', allowed:['airlockZone'], forbiddenNear:[], desc:'At one end of vault; dust-proof.' },
+      { id:'waste', name:'Waste Management', allowed:['airlockZone','outerZone'], forbiddenNear:['food','greenhouse','crew'], desc:'Near airlock; must be isolated from food & greenhouse.' },
+      { id:'life', name:'Life Support Hub', allowed:['coreZone'], forbiddenNear:[], desc:'Central vault location; connects everything.' },
+      { id:'power', name:'Power & Control Room', allowed:['coreZone','crewZone1','crewZone2'], forbiddenNear:[], desc:'Adjacent to Life Support; batteries + backup.' },
+      { id:'crew', name:'Crew Quarters', allowed:['crewZone1','crewZone2'], forbiddenNear:['waste','exercise'], desc:'Cabins along vault walls; quiet.' },
+      { id:'med', name:'Medical Bay', allowed:['crewZone1','coreZone','crewZone2'], forbiddenNear:['waste'], desc:'Near Life Support & Power; accessible.' },
+      { id:'food', name:'Food Storage & Prep', allowed:['crewZone1','crewZone2'], forbiddenNear:['waste'], desc:'Near greenhouse & crew; away from waste.' },
+      { id:'greenhouse', name:'Greenhouse Module', allowed:['outerZone','crewZone2','crewZone1'], forbiddenNear:['waste'], desc:'Near Life Support & Food; needs water + power.' },
+      { id:'exercise', name:'Exercise Zone', allowed:['crewZone1','crewZone2'], forbiddenNear:['crew'], desc:'Near Medical; away from sleeping pods.' },
+      { id:'stow', name:'Stowage / Cargo Racks', allowed:['airlockZone','crewZone1','crewZone2','outerZone'], forbiddenNear:[], desc:'Along walls & under floor; near airlock.' }
+    ];
+
+    // required items for the level
+    const REQUIRED = MODULES.map(m=>m.id);
+
+    // placements: moduleId -> zoneId
+    const placements = {};
+
+    // get DOM references
+    const modulesContainer = document.getElementById('modules');
+    const logEl = document.getElementById('log');
+    const placedList = document.getElementById('placedList');
+    const resultBox = document.getElementById('resultBox');
+
+    const zoneElements = {
+      airlockZone: document.getElementById('airlockZone'),
+      crewZone1: document.getElementById('crewZone1'),
+      coreZone: document.getElementById('coreZone'),
+      crewZone2: document.getElementById('crewZone2'),
+      outerZone: document.getElementById('outerZone')
+    };
+
+    // helper: zone centers (computed from SVG elements)
+    function zoneCenter(id){
+      const el = zoneElements[id];
+      // rect x,y,width,height
+      const x = parseFloat(el.getAttribute('x')), y = parseFloat(el.getAttribute('y'));
+      const w = parseFloat(el.getAttribute('width')), h = parseFloat(el.getAttribute('height'));
+      return { x: x + w/2, y: y + h/2 };
+    }
+
+    // create draggable module DOMs
+    MODULES.forEach(m=>{
+      const div = document.createElement('div');
+      div.className = 'module';
+      div.draggable = true;
+      div.id = 'mod-'+m.id;
+      div.innerHTML = `<div style="flex:1"><div style="font-weight:700">${m.name}</div><div class="muted" style="font-size:12px">${m.desc}</div></div>`;
+      div.addEventListener('dragstart', e=>{
+        e.dataTransfer.setData('text/plain', m.id);
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      modulesContainer.appendChild(div);
+    });
+
+    // attach drag/drop handlers to zones
+    Object.entries(zoneElements).forEach(([zoneId, el])=>{
+      el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('hover'); });
+      el.addEventListener('dragleave', e => { el.classList.remove('hover'); });
+      el.addEventListener('drop', e => {
+        e.preventDefault(); el.classList.remove('hover');
+        const mid = e.dataTransfer.getData('text/plain');
+        if(!mid) return;
+        placeModule(mid, zoneId);
+      });
+    });
+
+    // logging
+    function log(msg, type='info'){
+      const p = document.createElement('div');
+      p.textContent = '· ' + msg;
+      p.style.marginBottom = '6px';
+      if(type === 'bad') p.style.color = '#ffb4b4';
+      if(type === 'warn') p.style.color = '#ffd6a5';
+      logEl.prepend(p);
+    }
+
+    function updatePlacedList(){
+      placedList.innerHTML = '';
+      for(const [mid, zone] of Object.entries(placements)){
+        const m = MODULES.find(x=>x.id===mid);
+        const d = document.createElement('div');
+        d.className = 'module small';
+        d.textContent = `${m.name} — ${zone}`;
+        placedList.appendChild(d);
+      }
+      if(Object.keys(placements).length === 0) placedList.textContent = 'No modules placed yet.';
+    }
+
+    // place module
+    function placeModule(moduleId, zone){
+      const mod = MODULES.find(m=>m.id===moduleId);
+      if(!mod) return;
+      // allowed zone check
+      if(!mod.allowed.includes(zone)){
+        log(`${mod.name} is not usually placed in ${zone.toUpperCase()} (allowed: ${mod.allowed.join(', ')})`, 'warn');
+        resultBox.className = 'result bad';
+        resultBox.textContent = `${mod.name} possibly wrongly placed in ${zone}.`;
+        // still allow placement (player can test)
+      }
+      placements[moduleId] = zone;
+      log(`${mod.name} placed in ${zone.toUpperCase()}`);
+      renderPlacements();
+      updatePlacedList();
+    }
+
+    // render placed icons inside zones
+    function renderPlacements(){
+      const svg = document.getElementById('habitatSvg');
+      // remove previous placed markers
+      [...svg.querySelectorAll('[data-placed]')].forEach(n=>n.remove());
+
+      // count per zone to offset icons
+      const counts = { airlockZone:0, crewZone1:0, coreZone:0, crewZone2:0, outerZone:0 };
+
+      for(const [mid, zone] of Object.entries(placements)){
+        counts[zone] = (counts[zone] || 0) + 1;
+        const center = zoneCenter(zone);
+        // offset icons in a small circle
+        const angle = (counts[zone] * 48) * Math.PI/180;
+        const r = 28 + (Math.floor(counts[zone]/6) * 10);
+        const x = center.x + Math.cos(angle)*r - 18;
+        const y = center.y + Math.sin(angle)*r - 18;
+
+        const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+        g.setAttribute('transform', `translate(${x},${y})`);
+        g.setAttribute('data-placed', mid);
+
+        const rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+        rect.setAttribute('width',36); rect.setAttribute('height',36); rect.setAttribute('rx',8); rect.setAttribute('ry',8);
+        rect.setAttribute('fill','#60a5fa'); rect.setAttribute('stroke','rgba(2,6,23,0.6)');
+
+        const txt = document.createElementNS('http://www.w3.org/2000/svg','text');
+        txt.setAttribute('x',18); txt.setAttribute('y',22); txt.setAttribute('text-anchor','middle'); txt.setAttribute('font-size',10); txt.setAttribute('fill','#041124');
+        txt.textContent = mid.slice(0,3).toUpperCase();
+
+        g.appendChild(rect); g.appendChild(txt);
+        svg.appendChild(g);
+
+        // clicking removes placement
+        g.style.cursor = 'pointer';
+        g.addEventListener('click', ()=> {
+          delete placements[mid];
+          log(`${MODULES.find(m=>m.id===mid).name} removed.`);
+          renderPlacements();
+          updatePlacedList();
+        });
+      }
+    }
+
+    // reset
+    document.getElementById('resetBtn').addEventListener('click', ()=>{
+      for(const k of Object.keys(placements)) delete placements[k];
+      renderPlacements(); updatePlacedList(); log('Level reset.');
+      resultBox.className='result';
+      resultBox.textContent='Not checked yet.';
+    });
+
+    // check button -> run evaluator
+    document.getElementById('checkBtn').addEventListener('click', ()=>{
+      const outcome = evaluateLevel();
+      if(outcome.ok){
+        resultBox.className = 'result good';
+        resultBox.innerHTML = `<strong>Vault stabilized! ✅</strong><div style="font-size:13px;margin-top:6px">All required modules present and placement constraints satisfied. Crew can survive long-term (120–180 days).</div>`;
+        log('Level PASSED. Vault stable.');
+      } else {
+        resultBox.className = 'result bad';
+        resultBox.innerHTML = `<strong>Level Failed</strong><div style="font-size:13px;margin-top:6px">${outcome.messages.join('<br>')}</div>`;
+        log('Level FAILED. See violations above.', 'bad');
+      }
+    });
+
+    // hints
+    document.getElementById('hintBtn').addEventListener('click', ()=>{
+      const hints = MODULES.map(m=>`• ${m.name}: allowed in ${m.allowed.join(', ').toUpperCase()}.`).join('\n');
+      alert('Placement hints:\n\n' + hints + '\n\nExtra: Airlock must be at vault end; Life Support → core; Power adjacent to Life; Waste near airlock and away from Food/Greenhouse.');
+    });
+
+    // completion text
+    document.getElementById('completionTextBtn').addEventListener('click', ()=>{
+      alert(`Mars Vault/Arch Habitat stabilized! Correct placement ensures astronaut survival on Mars.\n\n• Thermal Control: Interior ~22°C despite extremes.\n• Life Support: 21% O₂, 101 kPa; CO₂ scrubbed; water recycled.\n• Power Systems: Solar + batteries + backup nuclear → continuous supply.\n• Waste: Isolated near airlock → no toxic gas buildup.\n• Food & Greenhouse: linked to Life Support → nutrition & O₂.\n• Sleep Pods: Circadian rhythm protected.\n• Exercise: Bone/muscle maintenance in 0.38 g.\n• Medical Bay: Central & accessible.\n• Communications: Earth contact maintained.\n• Stowage: Tools & spares are readily accessible.\n\nResult: Astronauts can survive long-term missions (120–180 days) in Vault/Arch Habitat Level 3.`);
+    });
+
+    // evaluation logic based on Level 3 rulesheet
+    function evaluateLevel(){
+      let ok = true;
+      const messages = [];
+
+      // 1) required presence
+      const missing = REQUIRED.filter(id => !placements[id]);
+      if(missing.length){
+        ok = false;
+        messages.push(`Missing modules: ${missing.map(id=>MODULES.find(m=>m.id===id).name).join(', ')}.`);
+      }
+
+      // 2) strict core placements
+      // Airlock must be at airlockZone
+      if(!placements['airlock']){
+        ok = false;
+        messages.push('Airlock is missing — must be placed at vault end.');
+      } else if(placements['airlock'] !== 'airlockZone'){
+        ok = false;
+        messages.push('Airlock must be placed at the vault end (airlock zone).');
+      }
+
+      // Life support must be in coreZone
+      if(!placements['life'] || placements['life'] !== 'coreZone'){
+        ok = false;
+        messages.push('Life Support Hub must be placed in the CORE zone.');
+      }
+
+      // Power must be adjacent to life: check euclidean distance between assigned zones
+      if(!placements['power']){
+        ok = false;
+        messages.push('Power & Control Room missing.');
+      } else {
+        const pZone = placements['power'];
+        const lifeZone = placements['life'];
+        if(lifeZone){
+          const dist = zoneDistance(lifeZone, pZone);
+          if(dist > 220){ // tuned threshold for adjacency (pixels)
+            ok = false;
+            messages.push('Power must be adjacent to Life Support (place Power close to CORE).');
+          }
+        }
+      }
+
+      // Medical must be near life & power
+      if(!placements['med']){
+        ok = false;
+        messages.push('Medical Bay missing.');
+      } else {
+        const medZone = placements['med'];
+        const lifeZone = placements['life'];
+        const powerZone = placements['power'];
+        let nearLife = false, nearPower = false;
+        if(lifeZone) nearLife = zoneDistance(lifeZone, medZone) <= 220;
+        if(powerZone) nearPower = zoneDistance(powerZone, medZone) <= 220;
+        if(!(nearLife && nearPower)){
+          ok = false;
+          messages.push('Medical Bay must be located near both Life Support and Power for emergency access.');
+        }
+      }
+
+      // Greenhouse near life & food
+      if(!placements['greenhouse']){
+        ok = false;
+        messages.push('Greenhouse missing.');
+      } else {
+        const ghZone = placements['greenhouse'];
+        const lifeZone = placements['life'];
+        const foodZone = placements['food'];
+        let nearLife = false, nearFood = false;
+        if(lifeZone) nearLife = zoneDistance(lifeZone, ghZone) <= 260;
+        if(foodZone) nearFood = zoneDistance(foodZone, ghZone) <= 200;
+        if(!(nearLife && nearFood)){
+          ok = false;
+          messages.push('Greenhouse should be near Life Support and Food Prep for integration.');
+        }
+      }
+
+      // Food near greenhouse & crew
+      if(!placements['food']){
+        ok = false;
+        messages.push('Food Storage & Prep missing.');
+      } else {
+        const foodZone = placements['food'];
+        const crewZones = ['crewZone1','crewZone2'];
+        const nearCrew = crewZones.some(z => placements['food'] && zoneDistance(z, foodZone) <= 200);
+        const ghPresent = placements['greenhouse'] ? zoneDistance(placements['greenhouse'], foodZone) <= 200 : false;
+        if(!nearCrew || !ghPresent){
+          ok = false;
+          messages.push('Food Prep must be near Crew Quarters and Greenhouse.');
+        }
+      }
+
+      // Waste: must be near airlock and isolated from food & greenhouse
+      if(!placements['waste']){
+        ok = false;
+        messages.push('Waste Management missing.');
+      } else {
+        const wasteZone = placements['waste'];
+        const airlockZone = placements['airlock'];
+        if(!airlockZone || zoneDistance(airlockZone, wasteZone) > 220){
+          ok = false;
+          messages.push('Waste Management must be placed near the Airlock for disposal.');
+        }
+        if(placements['food'] && zoneDistance(placements['food'], wasteZone) < 160){
+          ok = false;
+          messages.push('Waste must be isolated from Food Storage & Prep (too close).');
+        }
+        if(placements['greenhouse'] && zoneDistance(placements['greenhouse'], wasteZone) < 160){
+          ok = false;
+          messages.push('Waste must be isolated from Greenhouse (too close).');
+        }
+      }
+
+      // Exercise near Medical and away from sleep
+      if(!placements['exercise']){
+        ok = false;
+        messages.push('Exercise Zone missing.');
+      } else {
+        const exZone = placements['exercise'];
+        if(!placements['med'] || zoneDistance(placements['med'], exZone) > 220){
+          ok = false;
+          messages.push('Exercise Zone should be near Medical for monitoring.');
+        }
+        if(placements['crew'] && zoneDistance(placements['crew'], exZone) < 140){
+          ok = false;
+          messages.push('Exercise Zone too close to Crew Quarters (noise/vibration).');
+        }
+      }
+
+      // Stowage near airlock for supplies
+      if(!placements['stow']){
+        ok = false;
+        messages.push('Stowage / Cargo missing.');
+      } else {
+        if(!placements['airlock'] || zoneDistance(placements['airlock'], placements['stow']) > 240){
+          ok = false;
+          messages.push('Stowage should be near the Airlock for easy supply transfer.');
+        }
+      }
+
+      // Forbidden neighbor simple checks (same-zone collisions)
+      for(const m of MODULES){
+        const z = placements[m.id];
+        if(!z) continue;
+        for(const forbidden of m.forbiddenNear){
+          // match module id by name prefix or id
+          const fModule = MODULES.find(x => x.id === forbidden || x.id === forbidden.replace(/[^a-z]/g,''));
+          if(!fModule) continue;
+          const fid = fModule.id;
+          if(placements[fid] && placements[fid] === z){
+            ok = false;
+            messages.push(`${m.name} should not share same compartment with ${fModule.name} (${z}).`);
+          }
+        }
+      }
+
+      // final: life & power must exist
+      if(!placements['life'] || !placements['power']){
+        ok = false;
+        messages.push('Life Support and Power must both be present and correctly positioned.');
+      }
+
+      return { ok, messages };
+    }
+
+    // compute (approx) distance between centers of two zone ids or between zone id and zone id string
+    function zoneDistance(zoneA, zoneB){
+      // zoneA, zoneB can be either zone id strings or the actual current assigned zone id
+      const a = typeof zoneA === 'string' ? zoneCenter(zoneA) : zoneCenter(zoneA);
+      const b = typeof zoneB === 'string' ? zoneCenter(zoneB) : zoneCenter(zoneB);
+      const dx = a.x - b.x, dy = a.y - b.y;
+      return Math.sqrt(dx*dx + dy*dy);
+    }
+
+    // initial render
+    renderPlacements();
+    updatePlacedList();
+    log('Level 3 loaded. Drag modules into vault compartments. Click icons to remove placements.');
+  </script>
+</body>
+</html>

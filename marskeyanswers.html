@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>YOUR HOME IN SPACE - MARS</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Poppins&display=swap" rel="stylesheet">
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      background-image: url('https://tse2.mm.bing.net/th/id/OIP.hvHD900qKvXhbUcdQnTIdQHaEK?cb=12&rs=1&pid=ImgDetMain&o=7&rm=3');
+      background-size: cover;
+      background-position: center;
+      font-family: Arial, sans-serif;
+      color: white;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      background-color: rgba(0, 0, 0, 0.7);
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+      max-width: 700px;
+      width: 100%;
+      overflow: auto;
+    }
+
+    h6 {
+      font-size: 36px;
+      margin-bottom: 25px;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      font-family: 'Orbitron', sans-serif;
+      color: #ffb347; /* Mars orange */
+      text-shadow: 0 0 10px #ffb347, 0 0 20px #ff9a00; /* glow effect */
+      text-align: center;
+    }
+
+    .level {
+      font-family: 'Poppins', sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 25px;
+      text-align: left;
+    }
+
+    .level strong {
+      display: block;
+      font-size: 16px;
+      color: #ffb347; /* Mars orange */
+      margin-bottom: 8px;
+      text-shadow: 0 0 5px #ff6a00;
+    }
+
+    .module {
+      margin-left: 20px;
+    }
+
+    .tip {
+      margin-left: 20px;
+      font-style: italic;
+      color: rgba(255, 150, 50, 0.8);
+    }
+
+    .scientific {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255,255,255,0.3);
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .scientific h2 {
+      text-align: center;
+      color: #ffb347;
+      font-family: 'Orbitron', sans-serif;
+      text-shadow: 0 0 10px #ffb347;
+    }
+
+    .scientific p {
+      margin-bottom: 15px;
+      line-height: 1.6;
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h6>Mars Habitat</h6>
+
+    <!-- Your existing levels 1–5 -->
+    <div class="level">
+      <strong>Level 1:</strong>
+      <div class="module">
+        Airlock → Top-center, first pod.<br>
+        Life Support Core → Center, main hub. Connects Airlock, Power, and Comm.<br>
+        Power Zone → Left of Life Support.<br>
+        Communications → Right of Life Support.<br>
+        Sleeping Pods → Left side, Crew zone.<br>
+        Food Storage & Prep → Right side, Crew zone, away from Waste.<br>
+        Medical Station → Center-bottom, Crew zone.<br>
+        Exercise Corner → Bottom-center, Crew zone.<br>
+        Thermal Control → Far left, Outer zone.<br>
+        Waste Management → Far right, Outer zone, isolated from Food & Sleep.<br>
+        Stowage & Cargo → Bottom, Outer zone.
+      </div>
+      <div class="tip">
+        💡 Quick tips:<br>
+        • Always place Airlock first, then Life Support.<br>
+        • Waste must be far from crew pods and food.<br>
+        • Everything else connects via Life Support automatically.
+      </div>
+    </div>
+
+    <div class="level">
+      <strong>Level 2:</strong>
+      <div class="module">
+        CORE: Life Support, Power, Greenhouse<br>
+        CREW: Sleep Pods, Food Storage, Medical Bay, Exercise Zone<br>
+        OUTER: Airlock, Waste Management, Stowage, Communications Mast
+      </div>
+    </div>
+
+    <div class="level">
+      <strong>Level 3:</strong>
+      <div class="module">
+        Airlock + EVA Prep → airlockZone (left end)<br>
+        Life Support Hub → coreZone (center)<br>
+        Power & Control Room → crewZone1 (adjacent to Life Support)<br>
+        Medical Bay → crewZone2 (near Life & Power)<br>
+        Crew Quarters → split between crewZone1 and crewZone2<br>
+        Food Storage & Prep → crewZone2 (near Crew & Greenhouse)<br>
+        Greenhouse Module → outerZone (right end)<br>
+        Exercise Zone → crewZone2 (near Medical, away from Crew)<br>
+        Waste Management → outerZone (near Airlock or Outer, isolated from Food/Greenhouse)<br>
+        Stowage / Cargo Racks → airlockZone (near Airlock for supplies)
+      </div>
+    </div>
+
+    <div class="level">
+      <strong>Level 4:</strong>
+      <div class="module">
+        Hub Pod → Central pod — everything connects here.<br>
+        Airlock Pod → Must connect to Hub; surface access.<br>
+        Life Support Pod → Near Hub; oxygen & water critical.<br>
+        Power Pod → Must be near Hub & Life Support.<br>
+        Crew Quarters 1 → Away from Exercise & Stowage.<br>
+        Crew Quarters 2 → Same as above; near Hub if possible.<br>
+        Medical Pod → Near Hub & Life Support; emergencies.<br>
+        Food Pod → Near Crew & Greenhouse; away from Stowage.<br>
+        Greenhouse Pod → Near Life & Food; hydroponics.<br>
+        Exercise Pod → Near Medical; away from Crew.<br>
+        Stowage Pod → Near Airlock for supply access.
+      </div>
+    </div>
+
+    <div class="level">
+      <strong>Level 5:</strong>
+      <div class="module">
+        Airlock → airlockZone<br>
+        Hub (Cave Hub) → coreZone<br>
+        Living Pods → crewZone1, crewZone2<br>
+        Medical & Emergency Pod → coreZone<br>
+        Food Storage & Prep → crewZone1, crewZone2<br>
+        Greenhouse → outerZone, crewZone1, crewZone2<br>
+        Exercise & Recreation → crewZone1, crewZone2, coreZone<br>
+        Stowage & Cargo Pods → airlockZone, crewZone1, crewZone2, outerZone<br>
+        Power & Utility → coreZone, crewZone1, crewZone2<br>
+        Waste & Recycling Center → outerZone, crewZone2
+      </div>
+    </div>
+
+    <!-- NASA reasoning section -->
+    <div class="scientific">
+      <h2>MARS HABITAT — REAL NASA REASONS & RESTRICTIONS</h2>
+
+      <p>🧱 <strong>Level 1 — Cylinder Habitat</strong><br>
+      Cylindrical pressure pods are more stable under Mars’ thin atmosphere.<br>
+      You can’t place solar panels or radiators right next to living areas — dust storms deposit perchlorate dust which corrodes air seals.<br>
+      Airlocks must face the leeward side (away from storm winds) — NASA’s DRA 5.0 designs specify this for durability.</p>
+
+      <p>🧩 <strong>Level 2 — Dome Habitat</strong><br>
+      Dome habitats can’t be next to power reactors or fuel cells — electromagnetic fields affect sensors and hydroponics lights.<br>
+      Greenhouses must be near light and CO₂ sources, but far from dusty rover paths to avoid contamination.<br>
+      Large domes need a reinforced base — so they can’t be placed on sloped terrain or near excavation sites.</p>
+
+      <p>🏠 <strong>Level 3 — Cluster Habitat</strong><br>
+      Crew sleep pods can’t be near machinery or power units — vibration and heat affect rest cycles.<br>
+      Hydroponic zones can’t be adjacent to labs using chemicals — cross-contamination risk.<br>
+      NASA’s Mars Analog studies (HI-SEAS & MDRS) emphasize spatial zoning: living → working → support areas must follow environmental flow (air, power, waste).<br>
+      Landing pad or rover bays must be at least 50m away — dust ejecta can damage solar panels.</p>
+
+      <p>🔗 <strong>Level 4 — Subsurface/Shielded Habitat</strong><br>
+      Reactor systems or thermal generators underground risk overheating and gas buildup.<br>
+      Ventilation ducts must lead to the surface — so labs or greenhouses placed too deep can’t sustain proper airflow.<br>
+      NASA’s SHIELD and ICE HOUSE studies confirm temperature gradients affect electronics and oxygen flow inside regolith-based structures.</p>
+
+      <p>🌑 <strong>Level 5 — Lava Tube Base</strong><br>
+      Even in lava tubes, modules can’t be too close — vibrations and CO₂ buildup from one pod affect the others.<br>
+      Solar arrays must remain outside — you can’t generate power underground.<br>
+      Comms antennas must stay on the surface — rock layers block radio waves, so placing comms inside the tube breaks contact.<br>
+      NASA’s “Lava Tube Explorer” mission proposal highlights this — internal placement reduces signal strength drastically.</p>
+    </div>
+
+  </div>
+
+</body>
+</html>

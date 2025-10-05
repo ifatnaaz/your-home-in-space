@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Moon Cylindrical Habitat — Level 1 (Interactive)</title>
+  <style>
+    :root{--bg:#0b1020;--card:#0f1724;--accent:#60a5fa;--muted:#94a3b8;--good:#10b981;--bad:#ef4444}
+    html,body{height:100%;margin:0;font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;color:#e6eef8;background:linear-gradient(180deg,#030416 0%, #07102a 60%);}
+    .app{display:grid;grid-template-columns:320px 1fr 340px;gap:18px;padding:20px;height:100vh;box-sizing:border-box}
+
+    /* LEFT SIDEBAR */
+    .sidebar{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:16px;border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,0.6);overflow:auto}
+    .sidebar h2{margin:0 0 12px 0;font-size:18px}
+    .module{background:rgba(255,255,255,0.03);padding:10px;border-radius:8px;margin-bottom:10px;display:flex;align-items:center;gap:10px;cursor:grab;border:1px dashed rgba(255,255,255,0.03)}
+    .module:active{cursor:grabbing}
+    .module .tag{font-size:13px;padding:6px 8px;border-radius:6px;background:rgba(255,255,255,0.03)}
+    .muted{color:var(--muted);font-size:13px}
+
+    /* CENTER: HABITAT */
+    .stage{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+    .viewport{width:760px;height:560px;background:radial-gradient(circle at 20% 15%, rgba(96,165,250,0.04), transparent 10%), linear-gradient(180deg,#07132b,#021220);border-radius:14px;padding:18px;box-shadow:0 12px 30px rgba(2,6,23,0.6);position:relative;display:flex;align-items:center;justify-content:center}
+
+    .hud{position:absolute;left:18px;top:18px;color:var(--muted);font-size:13px}
+    .hud .rules{max-width:300px}
+
+    /* RIGHT: INFO PANEL */
+    .info{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:16px;border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,0.6);display:flex;flex-direction:column;gap:10px}
+    .info h3{margin:0}
+    .log{background:rgba(0,0,0,0.2);padding:10px;border-radius:8px;height:220px;overflow:auto;color:#d7e7ff}
+    .status{display:flex;gap:10px;flex-wrap:wrap}
+    .pill{padding:8px 10px;border-radius:999px;background:rgba(255,255,255,0.03);font-size:13px}
+
+    /* dropzone visuals */
+    .dropzone{stroke:rgba(255,255,255,0.06);fill:transparent;cursor:pointer}
+    .dropzone.hover{stroke:rgba(96,165,250,0.9);fill:rgba(96,165,250,0.04)}
+
+    .placed{font-size:13px;margin-top:6px;color:#dbeafe}
+    .module.small{font-size:13px;padding:6px}
+
+    .result{padding:10px;border-radius:8px}
+    .good{background:linear-gradient(90deg, rgba(16,185,129,0.12), rgba(16,185,129,0.04));border:1px solid rgba(16,185,129,0.12);color:var(--good)}
+    .bad{background:linear-gradient(90deg, rgba(239,68,68,0.06), rgba(239,68,68,0.02));border:1px solid rgba(239,68,68,0.06);color:var(--bad)}
+
+    .btn{padding:8px 12px;border-radius:8px;background:var(--accent);border:none;color:#041124;font-weight:600;cursor:pointer}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:#cfe8ff}
+
+    footer{position:absolute;right:20px;bottom:20px;color:var(--muted);font-size:12px}
+
+    @media (max-width:1100px){.app{grid-template-columns:240px 1fr;grid-auto-rows:1fr} .info{display:none}}
+  </style>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <h2>Modules — drag to place</h2>
+      <div id="modules"></div>
+      <div style="margin-top:12px" class="muted">
+        Tip: drag modules into Cylinder A (Core), Cylinder B (Crew), or Outer Hull.
+      </div>
+    </aside>
+
+    <main class="stage">
+      <div class="viewport">
+        <div class="hud">
+          <div><strong>Moon Cylindrical Habitat — Level 2</strong></div>
+          <div class="rules muted">Two connected cylinders (A=Core, B=Crew). Outer hull for waste/stowage. Place modules in correct zones to survive.</div>
+        </div>
+
+        <svg id="habitatSvg" width="620" height="520" viewBox="0 0 620 520" xmlns="http://www.w3.org/2000/svg">
+          <!-- Outer Hull -->
+          <rect id="outerZone" class="dropzone" x="50" y="50" width="520" height="420" rx="130" ry="130"/>
+          <!-- Cylinder A -->
+          <rect id="cylA" class="dropzone" x="120" y="160" width="180" height="200" rx="60" ry="60"/>
+          <!-- Cylinder B -->
+          <rect id="cylB" class="dropzone" x="320" y="160" width="180" height="200" rx="60" ry="60"/>
+          <text x="310" y="40" font-size="18" text-anchor="middle" fill="#cfe8ff">Dual Cylinders Cross-section</text>
+        </svg>
+      </div>
+
+      <div style="width:760px;display:flex;justify-content:space-between;align-items:center">
+        <div class="status">
+          <div class="pill">Goal: Place all modules correctly for dual-cylinder survival</div>
+          <div class="pill">Constraint: Avoid forbidden neighbors</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn" id="checkBtn">Check Level</button>
+          <button class="btn ghost" id="resetBtn">Reset</button>
+        </div>
+      </div>
+    </main>
+
+    <aside class="info">
+      <h3>Placement Log</h3>
+      <div class="log" id="log"></div>
+      <h3>Module Status</h3>
+      <div id="placedList" class="placed"></div>
+      <h3>Level Result</h3>
+      <div id="resultBox" class="result">Not checked yet.</div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn ghost" id="hintBtn">Show Placement Hints</button>
+        <button class="btn" id="completionTextBtn">Show Completion Text</button>
+      </div>
+    </aside>
+  </div>
+
+<script>
+const MODULES = [
+  {id:'waste',name:'Waste Management',allowed:['outer'],forbiddenNear:['food','med'],desc:'Outer hull, far from food & med.'},
+  {id:'thermal',name:'Thermal Control',allowed:['cylA'],forbiddenNear:[],desc:'Radiators on Cylinder A.'},
+  {id:'life',name:'Life Support',allowed:['cylA'],forbiddenNear:[],desc:'Central hub in Cylinder A.'},
+  {id:'comms',name:'Communications',allowed:['cylA'],forbiddenNear:[],desc:'Linked via Cylinder A.'},
+  {id:'power',name:'Power',allowed:['cylA'],forbiddenNear:[],desc:'Solar + Kilopower in Cylinder A.'},
+  {id:'stow',name:'Stowage',allowed:['cylB','outer'],forbiddenNear:[],desc:'Outer walls & Cylinder B.'},
+  {id:'food',name:'Food Storage & Prep',allowed:['cylB'],forbiddenNear:['waste','thermal'],desc:'Cylinder B, near life support, far from waste.'},
+  {id:'med',name:'Medical Care',allowed:['cylB'],forbiddenNear:['waste','ex'],desc:'Cylinder B, near sleep, isolated.'},
+  {id:'sleep',name:'Sleep Quarters',allowed:['cylB'],forbiddenNear:['ex','power','waste'],desc:'Quiet zone in Cylinder B.'},
+  {id:'ex',name:'Exercise',allowed:['cylB'],forbiddenNear:['sleep'],desc:'Cylinder B, isolated, vibration dampers.'}
+];
+
+const REQUIRED = MODULES.map(m=>m.id);
+const placements = {};
+const modulesContainer = document.getElementById('modules');
+const logEl = document.getElementById('log');
+const placedList = document.getElementById('placedList');
+const resultBox = document.getElementById('resultBox');
+
+const zoneElements = {outer:document.getElementById('outerZone'), cylA:document.getElementById('cylA'), cylB:document.getElementById('cylB')};
+
+// Create draggable modules
+MODULES.forEach(m=>{
+  const div=document.createElement('div');
+  div.className='module'; div.draggable=true; div.id='mod-'+m.id;
+  div.innerHTML=`<div style="flex:1"><strong>${m.name}</strong><div class="muted" style="font-size:12px">${m.desc}</div></div>`;
+  div.addEventListener('dragstart',e=>e.dataTransfer.setData('text/plain',m.id));
+  modulesContainer.appendChild(div);
+});
+
+// Drag & drop zones
+Object.entries(zoneElements).forEach(([zone,el])=>{
+  el.addEventListener('dragover',e=>{e.preventDefault(); el.classList.add('hover');});
+  el.addEventListener('dragleave',e=>{el.classList.remove('hover');});
+  el.addEventListener('drop',e=>{
+    e.preventDefault(); el.classList.remove('hover');
+    const modId=e.dataTransfer.getData('text/plain'); if(!modId) return; placeModule(modId,zone);
+  });
+});
+
+function log(msg){const p=document.createElement('div');p.textContent='· '+msg; logEl.prepend(p);}
+function updatePlacedList(){placedList.innerHTML=''; for(const [mid,zone] of Object.entries(placements)){const mod=MODULES.find(m=>m.id===mid);const d=document.createElement('div');d.className='module small';d.textContent=`${mod.name} — ${zone.toUpperCase()}`;placedList.appendChild(d);} if(!Object.keys(placements).length) placedList.textContent='No modules placed yet.';}
+
+function placeModule(mid,zone){
+  const mod=MODULES.find(m=>m.id===mid); if(!mod)return;
+  placements[mid]=zone; log(`${mod.name} placed in ${zone.toUpperCase()}`); renderPlacements(); updatePlacedList();
+}
+
+function renderPlacements(){
+  const svg=document.getElementById('habitatSvg');
+  [...svg.querySelectorAll('[data-placed]')].forEach(n=>n.remove());
+  const coords={cylA:{x:210,y:260,r:60},cylB:{x:430,y:260,r:60},outer:{x:310,y:260,r:120}};
+  const counts={cylA:0,cylB:0,outer:0};
+  for(const [mid,zone] of Object.entries(placements)){
+    counts[zone]++;
+    const angle=(counts[zone]*50)*Math.PI/180;
+    const r=coords[zone].r;
+    const x=coords[zone].x+Math.cos(angle)*r;
+    const y=coords[zone].y+Math.sin(angle)*r;
+    const g=document.createElementNS('http://www.w3.org/2000/svg','g'); g.setAttribute('transform',`translate(${x-18},${y-18})`); g.setAttribute('data-placed',mid);
+    const rect=document.createElementNS('http://www.w3.org/2000/svg','rect'); rect.setAttribute('width',36); rect.setAttribute('height',36); rect.setAttribute('rx',6); rect.setAttribute('fill','#60a5fa');
+    const text=document.createElementNS('http://www.w3.org/2000/svg','text'); text.setAttribute('x',18); text.setAttribute('y',22); text.setAttribute('text-anchor','middle'); text.setAttribute('font-size',10); text.setAttribute('fill','#041124'); text.textContent=mid.toUpperCase();
+    g.appendChild(rect); g.appendChild(text); svg.appendChild(g);
+    g.addEventListener('click',()=>{ delete placements[mid]; log(`${MODULES.find(m=>m.id===mid).name} removed.`); renderPlacements(); updatePlacedList(); });
+  }
+}
+
+document.getElementById('resetBtn').addEventListener('click',()=>{
+  for(const k of Object.keys(placements)) delete placements[k];
+  renderPlacements(); updatePlacedList(); log('Level reset.'); resultBox.className='result'; resultBox.textContent='Not checked yet.';
+});
+
+document.getElementById('checkBtn').addEventListener('click',()=>{
+  const check=evaluateLevel();
+  if(check.ok){ resultBox.className='result good'; resultBox.textContent='✅ Habitat stabilized! Astronauts can survive 60–90 days.'; log('Level PASSED. Habitat stabilized.'); }
+  else{ resultBox.className='result bad'; resultBox.textContent='⚠ Placement issues: '+check.messages.join('; '); log('Level FAILED','bad'); }
+});
+
+document.getElementById('hintBtn').addEventListener('click',()=>{
+  alert('Hints:\n'+MODULES.map(m=>`• ${m.name}: allowed in ${m.allowed.map(z=>z.toUpperCase()).join(', ')}`).join('\n'));
+});
+
+document.getElementById('completionTextBtn').addEventListener('click',()=>{
+  alert(`Habitat upgraded! Correct multi-cylinder placement allows astronauts to survive longer missions on the Moon.
+• Dual-cylinder design adds redundancy & isolation.
+• Thermal Control keeps 22 °C interior despite extremes (-170 °C to +120 °C).
+• Life Support maintains 21% O₂, 101 kPa pressure, recycling 85% of water & air.
+• Power Hub uses solar + Kilopower reactor for continuous energy.
+• Food Systems enable survival 60 days+.
+• Sleep Zone maintains circadian cycles.
+• Exercise Zone prevents muscle/bone loss.
+• Medical Bay handles injuries, radiation & dust.
+• Communications Mast ensures Earth contact.
+• Corridor hatches allow quick sealing → survival ↑ 80%.
+Result: Astronauts can survive 60–90 days on the Moon inside this dual-cylinder habitat!`);
+});
+
+function evaluateLevel(){
+  const messages=[]; let ok=true;
+  const missing=REQUIRED.filter(r=>!placements[r]); if(missing.length){ ok=false; messages.push(`Missing modules: ${missing.join(', ')}`); }
+  for(const [mid,zone] of Object.entries(placements)){
+    const mod=MODULES.find(m=>m.id===mid);
+    if(!mod.allowed.includes(zone)){ ok=false; messages.push(`${mod.name} wrongly placed in ${zone.toUpperCase()}`); }
+    for(const fn of mod.forbiddenNear){ if(placements[fn] && placements[fn]===zone){ ok=false; messages.push(`${mod.name} cannot be next to ${MODULES.find(x=>x.id===fn).name}`); } }
+  }
+  return {ok,messages};
+}
+
+renderPlacements(); updatePlacedList(); log('Level 2 loaded. Drag modules into Cylinder A (Core), Cylinder B (Crew), or Outer Hull.');
+</script>
+</body>
+</html>

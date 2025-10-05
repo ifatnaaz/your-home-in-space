@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>YOUR HOME IN SPACE</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Poppins&display=swap" rel="stylesheet">
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      background-image: url('https://tse2.mm.bing.net/th/id/OIP.hvHD900qKvXhbUcdQnTIdQHaEK?cb=12&rs=1&pid=ImgDetMain&o=7&rm=3');
+      background-size: cover;
+      background-position: center;
+      font-family: Arial, sans-serif;
+      color: white;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      background-color: rgba(0, 0, 0, 0.7);
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+      max-width: 700px;
+      width: 100%;
+      overflow: auto;
+    }
+
+    h6 {
+      font-size: 36px;
+      margin-bottom: 25px;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      font-family: 'Orbitron', sans-serif;
+      color: #00ffff;
+      text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff;
+      text-align: center;
+    }
+
+    .level {
+      font-family: 'Poppins', sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 25px;
+      text-align: left;
+    }
+
+    .level strong {
+      display: block;
+      font-size: 16px;
+      color: #00ffff;
+      margin-bottom: 8px;
+      text-shadow: 0 0 5px #00ffff;
+    }
+
+    .module {
+      margin-left: 20px;
+    }
+
+    .scientific {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255,255,255,0.3);
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .scientific h2 {
+      text-align: center;
+      color: #00ffff;
+      font-family: 'Orbitron', sans-serif;
+      text-shadow: 0 0 10px #00ffff;
+    }
+
+    .scientific p {
+      margin-bottom: 15px;
+      line-height: 1.6;
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h6>Space Habitat</h6>
+
+    <div class="level">
+      <strong>Level 1:</strong>
+      Objective: Place all required modules in the habitat correctly to stabilize it.  
+      <div class="module">
+        Core – center of cylinder: Life Support, Power, Communications, Stowage<br>
+        Crew – middle ring: Food, Medical Care, Sleep, Exercise<br>
+        Outer – outermost ring: Waste Management, Thermal Control
+      </div>
+    </div>
+
+    <div class="level">
+      <strong>Level 2:</strong>
+      Place all required modules in the habitat correctly to stabilize it.  
+      <div class="module">
+        Cylinder A (Core) – central cylinder: Life Support, Power, Communications, Thermal Control<br>
+        Cylinder B (Crew) – connected cylinder: Food Storage & Prep, Medical Care, Sleep Quarters, Exercise<br>
+        Outer Hull – outermost layer: Waste Management, Stowage
+      </div>
+    </div>
+
+    <div class="level">
+      <strong>Level 3:</strong>
+      Place all required modules in the segmented vault correctly to stabilize it.  
+      <div class="module">
+        Core Zone – central hub: Life Support Hub, Power & Control<br>
+        Crew Zones – two side compartments: Crew Quarters, Medical Bay, Food Prep & Storage, Exercise Zone<br>
+        Hull Zone – outer shell: Airlock + EVA Suit, Waste Management, Greenhouse Module, Stowage / Cargo
+      </div>
+    </div>
+
+    <div class="level">
+      <strong>Level 4:</strong>
+      <div class="module">
+        Core Zone: Life Support Hub, Power & Control<br>
+        Crew Zone 1: Crew Quarters, Medical Bay<br>
+        Crew Zone 2: Food Prep & Storage, Exercise Zone<br>
+        Hull Zone: Airlock + EVA Suit, Waste Management, Greenhouse Module, Stowage / Cargo
+      </div>
+    </div>
+
+    <div class="level">
+      <strong>Level 5:</strong>
+      <div class="module">
+        mainAirlock → Airlock at top center (cx:310, cy:40)<br>
+        caveHub → Central Hub (cx:310, cy:260)<br>
+        livingPod1 → Left side wall (cx:120, cy:200)<br>
+        livingPod2 → Right side wall (cx:500, cy:200)<br>
+        medPod → Between Airlock & Hub (cx:310, cy:160)<br>
+        foodPod → Left lower (cx:150, cy:320)<br>
+        greenhousePod → Right lower (cx:470, cy:320)<br>
+        exercisePod → Bottom center (cx:310, cy:420)<br>
+        cargoPod → Top left corner (cx:70, cy:60)<br>
+        powerPod → Top right corner (cx:550, cy:60)<br>
+        wastePod → Bottom center far from food & greenhouse (cx:310, cy:500)
+      </div>
+    </div>
+
+    <div class="scientific">
+      <h2>Moon Habitat — Scientific Reasoning (Based on NASA Data)</h2>
+
+      <p>🧱 <strong>Level 1 — Cylinder Habitat</strong><br>
+      Surface modules can’t be left fully exposed because the Moon has no magnetic field or thick atmosphere.<br>
+      Without regolith cover (around 1–2 m thick), astronauts would get hit by cosmic radiation ~300x stronger than Earth’s.<br>
+      NASA’s Lunar Habitat concepts (from Artemis program) require partial burial for thermal and micrometeoroid protection.</p>
+
+      <p>🧩 <strong>Level 2 — Dual Cylinder</strong><br>
+      Two habitats connected directly without pressure equalization chambers would be unsafe — one breach = both collapse.<br>
+      NASA’s research on Lunar Gateway and surface habitats shows the need for independent pressurization and redundant oxygen systems.<br>
+      Connecting tunnels must also maintain 0.1 MPa internal pressure, needing reinforced seals.</p>
+
+      <p>🏠 <strong>Level 3 — Dome Expansion</strong><br>
+      Large dome structures on the Moon are limited by material stress and dust load.<br>
+      Transparent domes can’t survive micrometeoroid impacts (~10–100 µm at 20 km/s).<br>
+      That’s why NASA’s designs use regolith-based 3D printing instead of glass domes — radiation protection + structural stability.</p>
+
+      <p>🔗 <strong>Level 4 — Cluster Habitat</strong><br>
+      Habitats too close together block communication with lunar orbiters.<br>
+      NASA’s communications studies show line-of-sight to the relay antenna is mandatory for mission data and health telemetry.<br>
+      Spacing also prevents vibration transfer between modules (important during moonquakes).</p>
+
+      <p>🌑 <strong>Level 5 — Lava Tube Base</strong><br>
+      Lava tubes are great for natural shielding, but sunlight never reaches inside, so solar panels outside must link via power conduits.<br>
+      Air circulation and heat regulation are big issues — NASA’s lava tube studies (Swamp Works & JPL) show internal heat management is essential since external cooling isn’t possible underground.</p>
+    </div>
+
+  </div>
+
+</body>
+</html>

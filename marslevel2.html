@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mars Dome Habitat — Level 2 (Interactive)</title>
+  <style>
+    :root{--bg:#0b1020;--card:#0f1724;--accent:#60a5fa;--muted:#94a3b8;--good:#10b981;--bad:#ef4444}
+    html,body{height:100%;margin:0;font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;color:#e6eef8;background:linear-gradient(180deg,#030416 0%, #07102a 60%);}
+    .app{display:grid;grid-template-columns:320px 1fr 340px;gap:18px;padding:20px;height:100vh;box-sizing:border-box}
+
+    /* LEFT SIDEBAR */
+    .sidebar{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:16px;border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,0.6);overflow:auto}
+    .sidebar h2{margin:0 0 12px 0;font-size:18px}
+    .module{background:rgba(255,255,255,0.03);padding:10px;border-radius:8px;margin-bottom:10px;display:flex;align-items:center;gap:10px;cursor:grab;border:1px dashed rgba(255,255,255,0.03)}
+    .module:active{cursor:grabbing}
+    .module .tag{font-size:13px;padding:6px 8px;border-radius:6px;background:rgba(255,255,255,0.03)}
+    .muted{color:var(--muted);font-size:13px}
+
+    /* CENTER: HABITAT */
+    .stage{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+    .viewport{width:760px;height:560px;background:radial-gradient(circle at 20% 15%, rgba(96,165,250,0.04), transparent 10%), linear-gradient(180deg,#07132b,#021220);border-radius:14px;padding:18px;box-shadow:0 12px 30px rgba(2,6,23,0.6);position:relative;display:flex;align-items:center;justify-content:center}
+
+    .hud{position:absolute;left:18px;top:18px;color:var(--muted);font-size:13px}
+    .hud .rules{max-width:300px}
+
+    /* RIGHT: INFO PANEL */
+    .info{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:16px;border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,0.6);display:flex;flex-direction:column;gap:10px}
+    .info h3{margin:0}
+    .log{background:rgba(0,0,0,0.2);padding:10px;border-radius:8px;height:220px;overflow:auto;color:#d7e7ff}
+    .status{display:flex;gap:10px;flex-wrap:wrap}
+    .pill{padding:8px 10px;border-radius:999px;background:rgba(255,255,255,0.03);font-size:13px}
+
+    /* dropzone visuals */
+    .dropzone{stroke:rgba(255,255,255,0.06);fill:transparent;cursor:pointer}
+    .dropzone.hover{stroke:rgba(96,165,250,0.9);fill:rgba(96,165,250,0.04)}
+
+    .placed{font-size:13px;margin-top:6px;color:#dbeafe}
+    .module.small{font-size:13px;padding:6px}
+
+    .result{padding:10px;border-radius:8px}
+    .good{background:linear-gradient(90deg, rgba(16,185,129,0.12), rgba(16,185,129,0.04));border:1px solid rgba(16,185,129,0.12);color:var(--good)}
+    .bad{background:linear-gradient(90deg, rgba(239,68,68,0.06), rgba(239,68,68,0.02));border:1px solid rgba(239,68,68,0.06);color:var(--bad)}
+
+    .btn{padding:8px 12px;border-radius:8px;background:var(--accent);border:none;color:#041124;font-weight:600;cursor:pointer}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:#cfe8ff}
+
+    footer{position:absolute;right:20px;bottom:20px;color:var(--muted);font-size:12px}
+
+    @media (max-width:1100px){.app{grid-template-columns:240px 1fr;grid-auto-rows:1fr} .info{display:none}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <h2>Modules — drag to place</h2>
+      <div id="modules"></div>
+      <div style="margin-top:12px" class="muted">Tip: Airlock must be on the dome edge (OUTER). Drop modules into CORE / CREW / OUTER.</div>
+    </aside>
+
+    <main class="stage">
+      <div class="viewport">
+        <div class="hud">
+          <div><strong>Mars Dome Habitat — Level 2</strong></div>
+          <div class="rules muted">
+            Semi-spherical dome. Zones: CORE (center) → Life Support, Power. CREW (middle ring) → Sleep, Food, Medical, Exercise. OUTER (edge) → Airlock, Waste, Stowage, Comms. Place modules correctly to stabilize habitat.
+          </div>
+        </div>
+
+        <!-- SVG dome with three concentric rings + outer edge "rim" zone -->
+        <svg id="habitatSvg" width="640" height="560" viewBox="0 0 640 560" xmlns="http://www.w3.org/2000/svg">
+          <!-- outer rim (outer zone) -->
+          <circle id="outer" class="dropzone" cx="320" cy="280" r="220" stroke-width="6"/>
+          <!-- crew ring -->
+          <circle id="crew" class="dropzone" cx="320" cy="280" r="120" stroke-width="6"/>
+          <!-- core center -->
+          <circle id="core" class="dropzone" cx="320" cy="280" r="45" stroke-width="6"/>
+          <!-- labels -->
+          <text x="320" y="60" font-size="18" text-anchor="middle" fill="#cfe8ff">Dome Cross-section (top view)</text>
+          <text x="320" y="86" font-size="12.5" text-anchor="middle" fill="#cfe8ff">Drop modules into CORE → CREW → OUTER</text>
+        </svg>
+      </div>
+
+      <div style="width:760px;display:flex;justify-content:space-between;align-items:center">
+        <div class="status">
+          <div class="pill">Goal: place required systems for Mars dome survival</div>
+          <div class="pill">Rules: Airlock on OUTER; Life Support & Power in CORE; Waste far from Food/Greenhouse/Medical</div>
+        </div>
+
+        <div style="display:flex;gap:8px">
+          <button class="btn" id="checkBtn">Check Level</button>
+          <button class="btn ghost" id="resetBtn">Reset</button>
+        </div>
+      </div>
+    </main>
+
+    <aside class="info">
+      <h3>Placement Log</h3>
+      <div class="log" id="log"></div>
+
+      <h3>Module Status</h3>
+      <div id="placedList" class="placed"></div>
+
+      <h3>Level Result</h3>
+      <div id="resultBox" class="result">Not checked yet.</div>
+
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn ghost" id="hintBtn">Show Placement Hints</button>
+        <button class="btn" id="completionTextBtn">Show Completion Text</button>
+      </div>
+    </aside>
+  </div>
+
+  <footer>Interactive level simulation • Drag & drop • Mars Dome rules</footer>
+
+  <script>
+    /* Module definitions for Mars Dome Level 2 */
+    const MODULES = [
+      { id:'airlock', name:'Airlock (Entrance)', allowed:['outer'], forbiddenNear:[], desc:'Must be on dome edge — first module.' },
+      { id:'life', name:'Life Support Core', allowed:['core'], forbiddenNear:[], desc:'Central hub, connects to Power, Greenhouse, Food.' },
+      { id:'power', name:'Power Hub', allowed:['core'], forbiddenNear:[], desc:'Batteries inside near Life Support; solar outside.' },
+      { id:'sleep', name:'Crew Sleep Pods', allowed:['crew'], forbiddenNear:['exercise','power'], desc:'Along dome walls, quiet zone.' },
+      { id:'food', name:'Food Storage & Prep', allowed:['crew'], forbiddenNear:['waste'], desc:'Near Sleep & Life Support; far from Waste.' },
+      { id:'medical', name:'Medical Bay', allowed:['crew'], forbiddenNear:['waste','exercise'], desc:'Near Life Support & Power; isolated from Waste/Exercise.' },
+      { id:'exercise', name:'Exercise Zone', allowed:['crew'], forbiddenNear:['sleep','medical'], desc:'Near Medical for monitoring; away from Sleep Pods.' },
+      { id:'greenhouse', name:'Greenhouse', allowed:['core','crew'], forbiddenNear:['waste'], desc:'Connects to Food & Life Support.' },
+      { id:'waste', name:'Waste Management', allowed:['outer'], forbiddenNear:['food','greenhouse','medical'], desc:'Near Airlock for disposal, far from Food/Greenhouse/Medical.' },
+      { id:'stow', name:'Stowage', allowed:['outer','crew'], forbiddenNear:[], desc:'Storage along walls / outer edge.' },
+      { id:'comms', name:'Communications Mast', allowed:['outer'], forbiddenNear:[], desc:'Edge/outer placement with line of sight.' }
+    ];
+
+    // required modules for completion (based on rulesheet)
+    const REQUIRED = ['airlock','life','power','food','sleep','medical','exercise','greenhouse','waste','stow','comms'];
+
+    const placements = {}; // moduleId -> zone ('core'|'crew'|'outer')
+    const zoneElements = { core: document.getElementById('core'), crew: document.getElementById('crew'), outer: document.getElementById('outer') };
+    const modulesContainer = document.getElementById('modules');
+    const logEl = document.getElementById('log');
+    const placedList = document.getElementById('placedList');
+    const resultBox = document.getElementById('resultBox');
+
+    // create draggable module cards
+    MODULES.forEach(m=>{
+      const el = document.createElement('div');
+      el.className = 'module';
+      el.draggable = true;
+      el.id = 'mod-' + m.id;
+      el.innerHTML = `<div style="width:40px;height:40px;border-radius:8px;background:rgba(255,255,255,0.02);display:flex;align-items:center;justify-content:center;font-weight:700">${m.name.split(' ').map(w=>w[0]).slice(0,2).join('')}</div>
+                      <div style="flex:1"><div style="font-weight:700">${m.name}</div><div class="muted" style="font-size:12px">${m.desc}</div></div>`;
+      el.addEventListener('dragstart', e=>{
+        e.dataTransfer.setData('text/plain', m.id);
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      modulesContainer.appendChild(el);
+    });
+
+    // zone drag/drop wiring
+    Object.entries(zoneElements).forEach(([zoneName, el])=>{
+      el.addEventListener('dragover', evt=>{ evt.preventDefault(); el.classList.add('hover'); });
+      el.addEventListener('dragleave', evt=>{ el.classList.remove('hover'); });
+      el.addEventListener('drop', evt=>{
+        evt.preventDefault(); el.classList.remove('hover');
+        const moduleId = evt.dataTransfer.getData('text/plain');
+        if(!moduleId) return;
+        placeModule(moduleId, zoneName);
+      });
+    });
+
+    // logging helper
+    function log(msg, type='info'){
+      const p = document.createElement('div'); p.textContent = '· ' + msg; p.style.marginBottom='6px';
+      if(type==='bad') p.style.color = '#ffb4b4';
+      logEl.prepend(p);
+    }
+
+    function updatePlacedList(){
+      placedList.innerHTML = '';
+      const keys = Object.keys(placements);
+      if(keys.length === 0){ placedList.textContent = 'No modules placed yet.'; return; }
+      keys.forEach(mid=>{
+        const mod = MODULES.find(m=>m.id===mid);
+        const d = document.createElement('div'); d.className='module small'; d.textContent = `${mod.name} — ${placements[mid].toUpperCase()}`;
+        placedList.appendChild(d);
+      });
+    }
+
+    function placeModule(modId, zone){
+      const mod = MODULES.find(m=>m.id===modId); if(!mod) return;
+
+      // allowed check
+      if(!mod.allowed.includes(zone)){
+        log(`${mod.name} is not allowed in ${zone.toUpperCase()} (allowed: ${mod.allowed.map(z=>z.toUpperCase()).join(', ')}).`, 'bad');
+        resultBox.className = 'result bad';
+        resultBox.textContent = `${mod.name} wrongly placed in ${zone.toUpperCase()}.`;
+        // still allow placement (user can experiment)
+      } else {
+        log(`${mod.name} placed in ${zone.toUpperCase()}.`);
+      }
+
+      placements[modId] = zone;
+      renderPlacements();
+      updatePlacedList();
+    }
+
+    function renderPlacements(){
+      const svg = document.getElementById('habitatSvg');
+      // remove old placed markers
+      [...svg.querySelectorAll('[data-placed]')].forEach(n=>n.remove());
+
+      // simple radial placement inside zone
+      const center = { x:320, y:280 };
+      const coords = {
+        core: { r: 25, count:0 },
+        crew: { r: 95, count:0 },
+        outer: { r: 170, count:0 }
+      };
+      for(const [mid, zone] of Object.entries(placements)){
+        coords[zone].count++;
+        const idx = coords[zone].count;
+        const angle = (idx * 45) * Math.PI/180;
+        const r = coords[zone].r;
+        const x = center.x + Math.cos(angle) * r;
+        const y = center.y + Math.sin(angle) * r;
+        const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+        g.setAttribute('transform', `translate(${x-18},${y-18})`);
+        g.setAttribute('data-placed', mid);
+
+        const rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+        rect.setAttribute('width',36); rect.setAttribute('height',36); rect.setAttribute('rx',8);
+        rect.setAttribute('fill','rgba(251,191,36,0.18)'); rect.setAttribute('stroke','rgba(255,255,255,0.06)');
+
+        const text = document.createElementNS('http://www.w3.org/2000/svg','text');
+        text.setAttribute('x',18); text.setAttribute('y',22); text.setAttribute('text-anchor','middle');
+        text.setAttribute('font-size',11); text.setAttribute('fill','#041124');
+        text.textContent = MODULES.find(m=>m.id===mid).name.split(' ').map(w=>w[0]).slice(0,2).join('');
+
+        g.appendChild(rect); g.appendChild(text);
+        svg.appendChild(g);
+
+        g.style.cursor = 'pointer';
+        g.addEventListener('click', ()=>{ removePlacement(mid); });
+      }
+    }
+
+    function removePlacement(mid){
+      const mod = MODULES.find(m=>m.id===mid);
+      delete placements[mid];
+      log(`${mod.name} removed.`);
+      renderPlacements(); updatePlacedList();
+    }
+
+    document.getElementById('resetBtn').addEventListener('click', ()=>{
+      for(const k of Object.keys(placements)) delete placements[k];
+      renderPlacements(); updatePlacedList(); log('Level reset.'); resultBox.className='result'; resultBox.textContent='Not checked yet.';
+    });
+
+    document.getElementById('checkBtn').addEventListener('click', ()=>{
+      const check = evaluateLevel();
+      if(check.ok){
+        resultBox.className='result good';
+        resultBox.innerHTML = `<strong>✅ Mars Dome stabilized!</strong><div style="font-size:13px;margin-top:6px">All required modules present and placed sensibly.</div>`;
+        log('Level PASSED. Dome stabilized.');
+      } else {
+        resultBox.className='result bad';
+        resultBox.innerHTML = `<strong>⚠ Level Failed</strong><div style="font-size:13px;margin-top:6px">${check.messages.join('<br>')}</div>`;
+        log('Level FAILED — see messages.', 'bad');
+      }
+    });
+
+    document.getElementById('hintBtn').addEventListener('click', ()=>{
+      const hints = MODULES.map(m=>`• ${m.name}: allowed in ${m.allowed.map(z=>z.toUpperCase()).join(', ')} — ${m.desc}`).join('\n');
+      alert('Placement hints:\n\n' + hints);
+    });
+
+    document.getElementById('completionTextBtn').addEventListener('click', ()=>{
+      alert(`Mars Dome Habitat stabilized! Correct placement ensures astronaut survival on Mars.
+• Thermal Control: Interior ~22 °C despite -90 °C night / +20 °C day.
+• Life Support: 21% O₂, 101 kPa; CO₂ scrubbed; water recycled.
+• Power Systems: Batteries inside + solar outside → continuous supply.
+• Waste Management: Isolated, ventable, near Airlock for disposal.
+• Food & Hydroponics: Proper nutrition maintained; contamination avoided.
+• Sleep Pods: Circadian rhythm protected → crew alert.
+• Exercise Zone: Bone/muscle maintenance in 0.38 g.
+• Medical Bay: Central & clean → emergency access guaranteed.
+• Greenhouse: Provides fresh O₂ & crops.
+• Communications: Earth contact maintained.
+Result: Astronauts can survive extended missions (60–120 days) safely in Mars Dome Habitat Level 2.`);
+    });
+
+    /* --- Evaluation rules (implements your Level 2 rulesheet) --- */
+    function evaluateLevel(){
+      const messages = [];
+      let ok = true;
+
+      // 1) All required present?
+      const missing = REQUIRED.filter(r => !placements[r]);
+      if(missing.length){
+        ok = false;
+        messages.push(`Missing modules: ${missing.map(id => MODULES.find(m=>m.id===id).name).join(', ')}.`);
+      }
+
+      // 2) Required zone checks: Airlock OUTER, Life & Power CORE
+      if(placements['airlock']){
+        if(placements['airlock'] !== 'outer'){
+          ok = false;
+          messages.push('Airlock must be placed on the OUTER edge of the dome.');
+        }
+      } else {
+        ok = false;
+        messages.push('Airlock is required (must be on OUTER).');
+      }
+
+      if(placements['life'] && placements['life'] !== 'core'){
+        ok = false;
+        messages.push('Life Support Core must be in the CORE (center).');
+      } else if(!placements['life']){
+        ok = false;
+        messages.push('Life Support Core missing.');
+      }
+
+      if(placements['power'] && placements['power'] !== 'core'){
+        ok = false;
+        messages.push('Power Hub must be placed in the CORE near Life Support.');
+      } else if(!placements['power']){
+        ok = false;
+        messages.push('Power Hub missing.');
+      }
+
+      // 3) Per-module allowed-zone violations
+      for(const [mid, zone] of Object.entries(placements)){
+        const mod = MODULES.find(m=>m.id===mid);
+        if(!mod.allowed.includes(zone)){
+          ok = false;
+          messages.push(`${mod.name} is not allowed in ${zone.toUpperCase()} (allowed: ${mod.allowed.map(z=>z.toUpperCase()).join(', ')}).`);
+        }
+      }
+
+      // 4) Forbidden neighbor checks (we approximate by same-zone adjacency)
+      // If two modules that must be separated end up in same zone, flag it.
+      for(const m of MODULES){
+        const placedZone = placements[m.id];
+        if(!placedZone) continue;
+        for(const forbiddenId of m.forbiddenNear){
+          const f = MODULES.find(x => x.id === forbiddenId);
+          if(!f) continue;
+          if(placements[f.id] && placements[f.id] === placedZone){
+            ok = false;
+            messages.push(`${m.name} should not share the same zone with ${f.name} (both in ${placedZone.toUpperCase()}).`);
+          }
+        }
+      }
+
+      // 5) Specific domain rules:
+      // - Waste should be on OUTER (already checked via allowed), and must be far from Food/Greenhouse/Medical.
+      if(placements['waste']){
+        // If any of these are placed and in same zone => violation (already caught above), but also check proximity if in adjacent ring:
+        // here we check if waste is in OUTER and food/greenhouse/medical are also in OUTER or CREW (crew is adjacent, that's still bad).
+        ['food','greenhouse','medical'].forEach(id=>{
+          if(placements[id]){
+            // if waste zone is same or adjacent (outer vs crew) => violation
+            if(placements['waste'] === placements[id] || (placements['waste'] === 'outer' && placements[id] === 'crew')) {
+              ok = false;
+              messages.push(`Waste Management must be isolated from ${MODULES.find(x=>x.id===id).name} (currently: WASTE=${placements['waste']}, ${id.toUpperCase()}=${placements[id]}).`);
+            }
+          }
+        });
+      }
+
+      // - Medical must be near Life/Power (we approximate as same or adjacent zone)
+      if(placements['medical'] && placements['life']){
+        const medZone = placements['medical'], lifeZone = placements['life'];
+        // acceptable if same zone (crew/core) OR medical in crew and life in core (adjacent)
+        const allowedMedConnection = medZone === lifeZone || (medZone === 'crew' && lifeZone === 'core');
+        if(!allowedMedConnection){
+          ok = false;
+          messages.push('Medical Bay should be near Life Support (same or adjacent zone).');
+        }
+      }
+
+      // - Exercise must be near Medical (same zone or adjacent)
+      if(placements['exercise'] && placements['medical']){
+        const exZone = placements['exercise'], medZone = placements['medical'];
+        if(!(exZone === medZone || (exZone === 'crew' && medZone === 'crew'))){
+          ok = false;
+          messages.push('Exercise zone should be near Medical for monitoring.');
+        }
+      }
+
+      // - Greenhouse must connect to Food & Life Support (we approximate as being in CORE or CREW and FOOD present)
+      if(placements['greenhouse']){
+        if(!placements['food']){
+          ok = false; messages.push('Greenhouse present but Food Storage & Prep is missing or not placed.');
+        }
+        if(!placements['life']){
+          ok = false; messages.push('Greenhouse should be linked to Life Support Core; Life Support missing.');
+        }
+      }
+
+      // - Airlock "first" requirement: enforce that if many modules placed but life not present -> warning (we already check life missing)
+      // optionally: ensure airlock exists (done above).
+
+      // If no specific messages, level OK
+      return { ok, messages: messages.length ? messages : ['All checks passed.'] };
+    }
+
+    // initial UI
+    updatePlacedList();
+    renderPlacements();
+    log('Mars Dome Level 2 loaded. Drag modules into CORE / CREW / OUTER. Click placed icons to remove them.');
+
+  </script>
+</body>
+</html>

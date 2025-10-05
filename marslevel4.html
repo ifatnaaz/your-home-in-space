@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mars Clustered Pods Base — Level 4</title>
+<style>
+:root{--bg:#0b1020;--card:#0f1724;--accent:#60a5fa;--muted:#94a3b8;--good:#10b981;--bad:#ef4444}
+html,body{height:100%;margin:0;font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;color:#e6eef8;background:linear-gradient(180deg,#030416 0%, #07102a 60%);}
+.app{display:grid;grid-template-columns:320px 1fr 340px;gap:18px;padding:20px;height:100vh;box-sizing:border-box}
+/* LEFT SIDEBAR */
+.sidebar{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:16px;border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,0.6);overflow:auto}
+.sidebar h2{margin:0 0 12px 0;font-size:18px}
+.module{background:rgba(255,255,255,0.03);padding:10px;border-radius:8px;margin-bottom:10px;display:flex;align-items:center;gap:10px;cursor:grab;border:1px dashed rgba(255,255,255,0.03)}
+.module:active{cursor:grabbing}
+.module .tag{font-size:13px;padding:6px 8px;border-radius:6px;background:rgba(255,255,255,0.03)}
+.muted{color:var(--muted);font-size:13px}
+/* CENTER: HABITAT */
+.stage{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+.viewport{width:760px;height:560px;background:radial-gradient(circle at 20% 15%, rgba(96,165,250,0.04), transparent 10%), linear-gradient(180deg,#07132b,#021220);border-radius:14px;padding:18px;box-shadow:0 12px 30px rgba(2,6,23,0.6);position:relative;display:flex;align-items:center;justify-content:center}
+.hud{position:absolute;left:18px;top:18px;color:var(--muted);font-size:13px}
+.hud .rules{max-width:300px}
+/* RIGHT: INFO PANEL */
+.info{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:16px;border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,0.6);display:flex;flex-direction:column;gap:10px}
+.info h3{margin:0}
+.log{background:rgba(0,0,0,0.2);padding:10px;border-radius:8px;height:220px;overflow:auto;color:#d7e7ff}
+.status{display:flex;gap:10px;flex-wrap:wrap}
+.pill{padding:8px 10px;border-radius:999px;background:rgba(255,255,255,0.03);font-size:13px}
+/* dropzone visuals */
+.dropzone{stroke:rgba(255,255,255,0.06);fill:transparent;cursor:pointer}
+.dropzone.hover{stroke:rgba(96,165,250,0.9);fill:rgba(96,165,250,0.04)}
+.placed{font-size:13px;margin-top:6px;color:#dbeafe}
+.module.small{font-size:13px;padding:6px}
+.result{padding:10px;border-radius:8px}
+.good{background:linear-gradient(90deg, rgba(16,185,129,0.12), rgba(16,185,129,0.04));border:1px solid rgba(16,185,129,0.12);color:var(--good)}
+.bad{background:linear-gradient(90deg, rgba(239,68,68,0.06), rgba(239,68,68,0.02));border:1px solid rgba(239,68,68,0.06);color:var(--bad)}
+.btn{padding:8px 12px;border-radius:8px;background:var(--accent);border:none;color:#041124;font-weight:600;cursor:pointer}
+.btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:#cfe8ff}
+footer{position:absolute;right:20px;bottom:20px;color:var(--muted);font-size:12px}
+@media (max-width:1100px){.app{grid-template-columns:240px 1fr;grid-auto-rows:1fr} .info{display:none}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+<h2>Modules — drag to place</h2>
+<div id="modules"></div>
+<div style="margin-top:12px" class="muted">Tip: Hub Pod = central; Airlock connects to Hub; Life Support & Power near Hub; place peripheral pods correctly.</div>
+</aside>
+
+<main class="stage">
+<div class="viewport">
+<div class="hud">
+<div><strong>Mars Clustered Pods Base — Level 4</strong></div>
+<div class="muted" style="max-width:360px">Place modules in correct pods. Hub central; Airlock leads to Hub; Life Support & Power critical; Crew Quarters, Medical, Food, Greenhouse, Exercise, Stowage connected properly.</div>
+</div>
+
+<svg id="habitatSvg" width="760" height="520" xmlns="http://www.w3.org/2000/svg">
+<!-- Pods: Hub center, others around -->
+<circle id="hubPod" class="dropzone" cx="380" cy="260" r="60" stroke-width="5"/>
+<circle id="airlockPod" class="dropzone" cx="200" cy="100" r="40" stroke-width="4"/>
+<circle id="crewPod1" class="dropzone" cx="100" cy="400" r="40" stroke-width="4"/>
+<circle id="crewPod2" class="dropzone" cx="660" cy="400" r="40" stroke-width="4"/>
+<circle id="medPod" class="dropzone" cx="380" cy="100" r="35" stroke-width="4"/>
+<circle id="foodPod" class="dropzone" cx="200" cy="260" r="35" stroke-width="4"/>
+<circle id="greenhousePod" class="dropzone" cx="560" cy="260" r="35" stroke-width="4"/>
+<circle id="exercisePod" class="dropzone" cx="380" cy="420" r="35" stroke-width="4"/>
+<circle id="stowPod" class="dropzone" cx="660" cy="100" r="35" stroke-width="4"/>
+<text x="380" y="50" text-anchor="middle" fill="#cfe8ff" font-size="14">Mars Clustered Pods</text>
+</svg>
+
+</div>
+<div style="width:760px;display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+<div class="status">
+<div class="pill">Goal: Stabilize habitat with correct pod placement</div>
+<div class="pill">Constraint: Hub = central; Airlock → Hub; proximity & isolation rules</div>
+</div>
+<div style="display:flex;gap:8px">
+<button class="pill" id="checkBtn">Check Level</button>
+<button class="pill" id="resetBtn">Reset</button>
+</div>
+</div>
+</main>
+
+<aside class="info">
+<h3>Placement Log</h3>
+<div class="log" id="log"></div>
+<h3>Module Status</h3>
+<div id="placedList" class="placed"></div>
+<h3>Level Result</h3>
+<div id="resultBox" class="result">Not checked yet.</div>
+<div style="display:flex;gap:8px;margin-top:8px">
+<button class="pill" id="hintBtn">Show Placement Hints</button>
+<button class="pill" id="completionTextBtn">Show Completion Text</button>
+</div>
+</aside>
+</div>
+<footer>Interactive level simulation — Mars Clustered Pods Level 4</footer>
+
+<script>
+const MODULES=[
+{id:'hub', name:'Hub Pod', allowed:['hubPod'], forbiddenNear:[], desc:'Central pod; all other pods connect to Hub.'},
+{id:'airlock', name:'Airlock Pod', allowed:['airlockPod'], forbiddenNear:[], desc:'Main entrance; must connect to Hub.'},
+{id:'life', name:'Life Support Pod', allowed:['hubPod'], forbiddenNear:[], desc:'Supplies O2, water, CO2 scrubbing; connects to Hub.'},
+{id:'power', name:'Power Pod', allowed:['hubPod'], forbiddenNear:[], desc:'Energy supply; connect to Hub & Life Support.'},
+{id:'crew1', name:'Crew Quarters 1', allowed:['crewPod1'], forbiddenNear:['exercisePod','stowPod'], desc:'Private cabins; connect to Hub.'},
+{id:'crew2', name:'Crew Quarters 2', allowed:['crewPod2'], forbiddenNear:['exercisePod','stowPod'], desc:'Private cabins; connect to Hub.'},
+{id:'med', name:'Medical Pod', allowed:['medPod'], forbiddenNear:['stowPod'], desc:'Near Hub & Life Support; central emergencies.'},
+{id:'food', name:'Food Pod', allowed:['foodPod'], forbiddenNear:['stowPod'], desc:'Near Crew & Greenhouse; away from Waste.'},
+{id:'greenhouse', name:'Greenhouse Pod', allowed:['greenhousePod'], forbiddenNear:['stowPod'], desc:'Connects to Life Support & Food; hydroponics.'},
+{id:'exercise', name:'Exercise Pod', allowed:['exercisePod'], forbiddenNear:['crew1','crew2'], desc:'Near Medical; away from Crew.'},
+{id:'stow', name:'Stowage Pod', allowed:['stowPod'], forbiddenNear:[], desc:'Near Airlock for supply transfer; accessible from Hub.'}
+];
+const REQUIRED=MODULES.map(m=>m.id);
+const placements={};
+const modulesContainer=document.getElementById('modules');
+const logEl=document.getElementById('log');
+const placedList=document.getElementById('placedList');
+const resultBox=document.getElementById('resultBox');
+const zoneElements={
+hubPod: document.getElementById('hubPod'),
+airlockPod: document.getElementById('airlockPod'),
+crewPod1: document.getElementById('crewPod1'),
+crewPod2: document.getElementById('crewPod2'),
+medPod: document.getElementById('medPod'),
+foodPod: document.getElementById('foodPod'),
+greenhousePod: document.getElementById('greenhousePod'),
+exercisePod: document.getElementById('exercisePod'),
+stowPod: document.getElementById('stowPod')
+};
+function zoneCenter(id){const el=zoneElements[id];return {x:parseFloat(el.getAttribute('cx')),y:parseFloat(el.getAttribute('cy'))};}
+// create draggable modules
+MODULES.forEach(m=>{const div=document.createElement('div');div.className='module';div.draggable=true;div.id='mod-'+m.id;div.innerHTML=`<div style="flex:1"><div style="font-weight:700">${m.name}</div><div class="muted" style="font-size:12px">${m.desc}</div></div>`;div.addEventListener('dragstart',e=>{e.dataTransfer.setData('text/plain',m.id);e.dataTransfer.effectAllowed='move';});modulesContainer.appendChild(div);});
+// attach drop handlers
+Object.entries(zoneElements).forEach(([zoneId, el])=>{el.addEventListener('dragover',e=>{e.preventDefault();el.classList.add('hover');});el.addEventListener('dragleave',e=>{el.classList.remove('hover');});el.addEventListener('drop',e=>{e.preventDefault();el.classList.remove('hover');const mid=e.dataTransfer.getData('text/plain');if(!mid)return;placeModule(mid,zoneId);});});
+function log(msg,type='info'){const p=document.createElement('div');p.textContent='· '+msg;p.style.marginBottom='6px';if(type==='bad')p.style.color='#ffb4b4';if(type==='warn')p.style.color='#ffd6a5';logEl.prepend(p);}
+function updatePlacedList(){placedList.innerHTML='';for(const [mid,zone] of Object.entries(placements)){const m=MODULES.find(x=>x.id===mid);const d=document.createElement('div');d.className='module small';d.textContent=`${m.name} — ${zone}`;placedList.appendChild(d);}if(Object.keys(placements).length===0)placedList.textContent='No modules placed yet.';}
+function placeModule(moduleId,zone){const mod=MODULES.find(m=>m.id===moduleId);if(!mod)return;if(!mod.allowed.includes(zone)){log(`${mod.name} is not usually placed in ${zone.toUpperCase()} (allowed: ${mod.allowed.join(', ')})`,'warn');resultBox.className='result bad';resultBox.textContent=`${mod.name} possibly wrongly placed in ${zone}.`;}placements[moduleId]=zone;log(`${mod.name} placed in ${zone.toUpperCase()}`);renderPlacements();updatePlacedList();}
+function renderPlacements(){const svg=document.getElementById('habitatSvg');[...svg.querySelectorAll('[data-placed]')].forEach(n=>n.remove());const counts={};for(const [mid,zone] of Object.entries(placements)){counts[zone]=(counts[zone]||0)+1;const center=zoneCenter(zone);const angle=(counts[zone]*48)*Math.PI/180;const r=28+(Math.floor(counts[zone]/6)*10);const x=center.x+Math.cos(angle)*r-18;const y=center.y+Math.sin(angle)*r-18;const g=document.createElementNS('http://www.w3.org/2000/svg','g');g.setAttribute('transform',`translate(${x},${y})`);g.setAttribute('data-placed',mid);const rect=document.createElementNS('http://www.w3.org/2000/svg','rect');rect.setAttribute('width',36);rect.setAttribute('height',36);rect.setAttribute('rx',8);rect.setAttribute('ry',8);rect.setAttribute('fill','#60a5fa');rect.setAttribute('stroke','rgba(2,6,23,0.6)');const txt=document.createElementNS('http://www.w3.org/2000/svg','text');txt.setAttribute('x',18);txt.setAttribute('y',22);txt.setAttribute('text-anchor','middle');txt.setAttribute('font-size',10);txt.setAttribute('fill','#041124');txt.textContent=mid.slice(0,3).toUpperCase();g.appendChild(rect);g.appendChild(txt);svg.appendChild(g);g.style.cursor='pointer';g.addEventListener('click',()=>{delete placements[mid];log(`${MODULES.find(m=>m.id===mid).name} removed.`);renderPlacements();updatePlacedList();});}}
+document.getElementById('resetBtn').addEventListener('click',()=>{for(const k of Object.keys(placements))delete placements[k];renderPlacements();updatePlacedList();log('Level reset.');resultBox.className='result';resultBox.textContent='Not checked yet.';});
+document.getElementById('checkBtn').addEventListener('click',()=>{const outcome=evaluateLevel();if(outcome.ok){resultBox.className='result good';resultBox.innerHTML=`<strong>Habitat stabilized! ✅</strong><div style="font-size:13px;margin-top:6px">All required pods present and placement constraints satisfied. Crew can survive long-term (180–250 days).</div>`;log('Level PASSED. Habitat stable.');}else{resultBox.className='result bad';resultBox.innerHTML=`<strong>Level Failed</strong><div style="font-size:13px;margin-top:6px">${outcome.messages.join('<br>')}</div>`;log('Level FAILED. See violations above.','bad');}});
+document.getElementById('hintBtn').addEventListener('click',()=>{const hints=MODULES.map(m=>`• ${m.name}: allowed in ${m.allowed.join(', ').toUpperCase()}.`).join('\n');alert('Placement hints:\n\n'+hints+'\n\nExtra: Hub = central; Airlock connects to Hub; Life Support & Power near Hub; Crew, Medical, Food, Greenhouse, Exercise, Stowage connect properly.');});
+document.getElementById('completionTextBtn').addEventListener('click',()=>{alert(`Mars Clustered Pods Habitat stabilized! Correct placement ensures astronaut survival on Mars.\n\n• Thermal Control: Interior ~22°C despite -90°C night / +20°C day.\n• Life Support: Central, redundant; CO₂ scrubbed; water recycled.\n• Power Systems: Solar + battery + nuclear backup → continuous supply.\n• Waste Management: Isolated → no toxic gas buildup.\n• Food & Hydroponics: Proper nutrition; contamination avoided.\n• Sleep Pods: Circadian rhythm protected.\n• Exercise Zone: Bone/muscle maintenance in 0.38 g.\n• Medical Bay: Central, clean → emergency access guaranteed.\n• Greenhouse: Provides fresh O₂ & crops.\n• Communications: Earth contact maintained.\n• Stowage: Tools, spares, emergency kits accessible.\n• Hub Pod Network: All pods connected → Life Support & Power delivered efficiently.\nResult: Astronauts can survive long-term missions (180–250 days) safely.`);});
+// evaluation logic
+function evaluateLevel(){let ok=true;const messages=[];const zonePos=zoneElements;const dist=(a,b)=>{const ca=zoneCenter(a),cb=zoneCenter(b);return Math.sqrt((ca.x-cb.x)**2+(ca.y-cb.y)**2);};const hub='hub';const airlock='airlock';const life='life';const power='power';const med='med';const crewZones=['crew1','crew2'];const food='food';const greenhouse='greenhouse';const exercise='exercise';const stow='stow';// check missing
+const missing=REQUIRED.filter(id=>!placements[id]);if(missing.length){ok=false;messages.push(`Missing pods: ${missing.map(id=>MODULES.find(m=>m.id===id).name).join(', ')}.`);}
+// hub must exist
+if(!placements[hub]){ok=false;messages.push('Hub Pod missing — central connector required.');}
+// airlock connects to hub
+if(!placements[airlock])ok=false,messages.push('Airlock Pod missing — surface access impossible.');
+else if(dist(placements[airlock],placements[hub])>220){ok=false;messages.push('Airlock must connect to Hub Pod.');}
+// life support connects to hub
+if(!placements[life])ok=false,messages.push('Life Support Pod missing.');
+else if(dist(placements[life],placements[hub])>220){ok=false;messages.push('Life Support must connect directly to Hub.');}
+// power connects to hub & life
+if(!placements[power])ok=false,messages.push('Power Pod missing.');
+else if(dist(placements[power],placements[hub])>220||dist(placements[power],placements[life])>220)ok=false,messages.push('Power must connect to Hub & Life Support.');
+// medical near hub & life
+if(!placements[med])ok=false,messages.push('Medical Pod missing.');
+else if(dist(placements[med],placements[hub])>220||dist(placements[med],placements[life])>220)ok=false,messages.push('Medical must be near Hub & Life Support.');
+// crew quarters connected, away from exercise & stow
+crewZones.forEach(cz=>{if(!placements[cz])ok=false,messages.push(`${MODULES.find(m=>m.id===cz).name} missing.`);else if(dist(placements[cz],placements[exercise])<140)ok=false,messages.push(`${MODULES.find(m=>m.id===cz).name} too close to Exercise.`);});
+// food near crew & greenhouse, away from stow
+if(!placements[food])ok=false,messages.push('Food Pod missing.');
+else if(dist(placements[food],placements[greenhouse])>200||!crewZones.some(cz=>dist(placements[food],placements[cz])<=200))ok=false,messages.push('Food Pod must connect to Crew & Greenhouse, away from Stowage.');
+// greenhouse near life & food
+if(!placements[greenhouse])ok=false,messages.push('Greenhouse Pod missing.');
+else if(dist(placements[greenhouse],placements[life])>220||dist(placements[greenhouse],placements[food])>200)ok=false,messages.push('Greenhouse must connect to Life Support & Food.');
+// exercise near medical, away from crew
+if(!placements[exercise])ok=false,messages.push('Exercise Pod missing.');
+else if(dist(placements[exercise],placements[med])>220||crewZones.some(cz=>dist(placements[exercise],placements[cz])<140))ok=false,messages.push('Exercise Pod must be near Medical & away from Crew Quarters.');
+// stow near airlock
+if(!placements[stow])ok=false,messages.push('Stowage Pod missing.');
+else if(dist(placements[stow],placements[airlock])>240)ok=false,messages.push('Stowage must be near Airlock.');
+return{ok,messages};}
+renderPlacements();updatePlacedList();log('Level 4 loaded. Drag pods into correct positions. Click icons to remove.');
+</script>
+</body>
+</html>

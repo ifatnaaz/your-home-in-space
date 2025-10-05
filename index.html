@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>YOUR HOME IN SPACE</title>
+
+  <!-- Importing Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Poppins&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-image: url('https://tse2.mm.bing.net/th/id/OIP.hvHD900qKvXhbUcdQnTIdQHaEK?cb=12&rs=1&pid=ImgDetMain&o=7&rm=3');
+      background-size: cover;
+      background-position: center;
+      font-family: Arial, sans-serif;
+      color: white;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    .container {
+      background-color: rgba(0, 0, 0, 0.6);
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+      max-width: 700px;
+      position: relative;
+      top: -40px;
+    }
+
+    h6 {
+      font-size: 36px;
+      margin-bottom: 25px;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      font-family: 'Orbitron', sans-serif;
+      color: #00ffff;
+      text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff;
+    }
+
+    p {
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+
+    .start-button {
+      padding: 16px 50px;
+      font-size: 20px;
+      font-family: 'Orbitron', sans-serif;
+      color: #00ffff;
+      background: linear-gradient(90deg, #001f3f, #003366);
+      border: 2px solid #00ffff;
+      border-radius: 10px;
+      text-decoration: none;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease-in-out;
+      box-shadow: 0 0 15px #00ffff88, 0 0 30px #00ffff44;
+    }
+
+    .start-button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(120deg, transparent, rgba(0,255,255,0.2), transparent);
+      transition: all 0.6s ease-in-out;
+    }
+
+    .start-button:hover::before {
+      left: 100%;
+    }
+
+    .start-button:hover {
+      color: #ffffff;
+      background-color: #002244;
+      box-shadow: 0 0 20px #00ffff, 0 0 40px #00ffff, 0 0 60px #00ffff;
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h6>Space Habitat</h6>
+    
+    <p>
+      Welcome to <strong>Space Habitat</strong> Space Habitat Challenge
+Design a visual tool to define and explore space habitat layouts. Your tool should let users shape the habitat’s volume and organize key functions like life support, power, waste management, food storage, medical care, sleep, and exercise. Create a space station that supports survival and mission success in space or on planetary surfaces.
+
+    </p>
+    
+    <p style="font-size: 12px; font-style: italic;">(Exploration Systems Development Mission Directorate)</p>
+
+    <a href="secondpage.html" class="start-button">Start Game</a>
+
+
+  </div>
+
+</body>
+</html>

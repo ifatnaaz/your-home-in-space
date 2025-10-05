@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mars Lava Tube Base — Level 5</title>
+  <style>
+    :root{--bg:#0b1020;--card:#0f1724;--accent:#60a5fa;--muted:#94a3b8;--good:#10b981;--bad:#ef4444}
+    html,body{height:100%;margin:0;font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;color:#e6eef8;background:linear-gradient(180deg,#030416 0%, #07102a 60%);}
+    .app{display:grid;grid-template-columns:320px 1fr 340px;gap:18px;padding:20px;height:100vh;box-sizing:border-box}
+    .sidebar{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:16px;border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,0.6);overflow:auto}
+    .sidebar h2{margin:0 0 12px 0;font-size:18px}
+    .module{background:rgba(255,255,255,0.03);padding:10px;border-radius:8px;margin-bottom:10px;display:flex;align-items:center;gap:10px;cursor:grab;border:1px dashed rgba(255,255,255,0.03)}
+    .module:active{cursor:grabbing}
+    .muted{color:var(--muted);font-size:13px}
+    .stage{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+    .viewport{width:760px;height:560px;background:radial-gradient(circle at 20% 15%, rgba(96,165,250,0.04), transparent 10%), linear-gradient(180deg,#07132b,#021220);border-radius:14px;padding:18px;box-shadow:0 12px 30px rgba(2,6,23,0.6);position:relative;display:flex;align-items:center;justify-content:center}
+    .hud{position:absolute;left:18px;top:18px;color:var(--muted);font-size:13px}
+    .hud .rules{max-width:300px}
+    .info{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:16px;border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,0.6);display:flex;flex-direction:column;gap:10px}
+    .info h3{margin:0}
+    .log{background:rgba(0,0,0,0.2);padding:10px;border-radius:8px;height:220px;overflow:auto;color:#d7e7ff}
+    .status{display:flex;gap:10px;flex-wrap:wrap}
+    .pill{padding:8px 10px;border-radius:999px;background:rgba(255,255,255,0.03);font-size:13px}
+    .dropzone{stroke:rgba(255,255,255,0.06);fill:transparent;cursor:pointer}
+    .dropzone.hover{stroke:rgba(96,165,250,0.9);fill:rgba(96,165,250,0.04)}
+    .placed{font-size:13px;margin-top:6px;color:#dbeafe}
+    .module.small{font-size:13px;padding:6px}
+    .result{padding:10px;border-radius:8px}
+    .good{background:linear-gradient(90deg, rgba(16,185,129,0.12), rgba(16,185,129,0.04));border:1px solid rgba(16,185,129,0.12);color:var(--good)}
+    .bad{background:linear-gradient(90deg, rgba(239,68,68,0.06), rgba(239,68,68,0.02));border:1px solid rgba(239,68,68,0.06);color:var(--bad)}
+    .btn{padding:8px 12px;border-radius:8px;background:var(--accent);border:none;color:#041124;font-weight:600;cursor:pointer}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:#cfe8ff}
+    footer{position:absolute;right:20px;bottom:20px;color:var(--muted);font-size:12px}
+    @media (max-width:1100px){.app{grid-template-columns:240px 1fr;grid-auto-rows:1fr} .info{display:none}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <h2>Modules — drag to place</h2>
+      <div id="modules"></div>
+      <div style="margin-top:12px" class="muted">Tip: Airlock must lead to central hub; Cave Hub central; Living Pods along walls; Food near Greenhouse; Waste isolated.</div>
+    </aside>
+
+    <main class="stage">
+      <div class="viewport">
+        <div class="hud">
+          <div><strong>Mars Lava Tube Base — Level 5</strong></div>
+          <div class="muted" style="max-width:360px">Underground lava tube network: place modules into pods. Rules: Airlock → Hub, Hub central, Living Pods along walls, Medical near Hub, Food near Greenhouse, Waste isolated.</div>
+        </div>
+
+        <svg id="habitatSvg" width="760" height="520" viewBox="0 0 760 520" xmlns="http://www.w3.org/2000/svg">
+          <rect x="40" y="60" width="680" height="400" rx="80" ry="80" fill="rgba(255,255,255,0.01)" stroke="rgba(255,255,255,0.02)"/>
+          <rect id="airlockZone" class="dropzone" x="60" y="140" width="120" height="240" rx="28" ry="28" stroke-width="4"/>
+          <rect id="crewZone1" class="dropzone" x="200" y="120" width="140" height="280" rx="28" ry="28" stroke-width="4"/>
+          <rect id="coreZone" class="dropzone" x="360" y="110" width="160" height="300" rx="32" ry="32" stroke-width="5"/>
+          <rect id="crewZone2" class="dropzone" x="540" y="120" width="140" height="280" rx="28" ry="28" stroke-width="4"/>
+          <rect id="outerZone" class="dropzone" x="700" y="140" width="30" height="240" rx="12" ry="12" stroke-width="4"/>
+        </svg>
+      </div>
+
+      <div style="width:760px;display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+        <div class="status">
+          <div class="pill">Goal: Place required modules to stabilize lava tube base</div>
+          <div class="pill">Constraint: respect proximity & isolation rules</div>
+        </div>
+
+        <div style="display:flex;gap:8px">
+          <button class="pill" id="checkBtn">Check Level</button>
+          <button class="pill" id="resetBtn">Reset</button>
+        </div>
+      </div>
+    </main>
+
+    <aside class="info">
+      <h3>Placement Log</h3>
+      <div class="log" id="log"></div>
+
+      <h3>Module Status</h3>
+      <div id="placedList" class="placed"></div>
+
+      <h3>Level Result</h3>
+      <div id="resultBox" class="result">Not checked yet.</div>
+
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="pill" id="hintBtn">Show Placement Hints</button>
+        <button class="pill" id="completionTextBtn">Show Completion Text</button>
+      </div>
+    </aside>
+  </div>
+
+  <footer>Interactive level simulation — Mars Lava Tube Base Level 5</footer>
+
+  <script>
+    const MODULES = [
+      { id:'airlock', name:'Main Airlock', allowed:['airlockZone'], forbiddenNear:[], desc:'Connects surface → underground; dust-proof, EVA suit storage.' },
+      { id:'hub', name:'Cave Hub', allowed:['coreZone'], forbiddenNear:[], desc:'Central hub; connects all pods, Life Support, Power & Utility.' },
+      { id:'living', name:'Living Pods', allowed:['crewZone1','crewZone2'], forbiddenNear:['waste','power'], desc:'Along cave walls; private, shielded cabins for sleep.' },
+      { id:'med', name:'Medical & Emergency Pod', allowed:['crewZone1','coreZone','crewZone2'], forbiddenNear:['waste'], desc:'Central, connected to Life Support & Power; emergency access.' },
+      { id:'food', name:'Food Storage & Prep', allowed:['crewZone1','crewZone2'], forbiddenNear:['waste'], desc:'Near Greenhouse; separated from Waste.' },
+      { id:'greenhouse', name:'Greenhouse Zones', allowed:['outerZone','crewZone1','crewZone2'], forbiddenNear:['waste'], desc:'Hydroponics; connected to Life Support & Food.' },
+      { id:'exercise', name:'Exercise & Recreation', allowed:['crewZone1','crewZone2','coreZone'], forbiddenNear:['living'], desc:'Near Medical; isolated from Living Pods.' },
+      { id:'stow', name:'Stowage & Cargo Pods', allowed:['airlockZone','crewZone1','crewZone2','outerZone'], forbiddenNear:[], desc:'Near Airlock & accessible from Hub.' },
+      { id:'power', name:'Power & Utility Zones', allowed:['coreZone','crewZone1','crewZone2'], forbiddenNear:[], desc:'Side chambers; connected to Hub & Life Support.' },
+      { id:'waste', name:'Waste & Recycling Center', allowed:['outerZone','crewZone2'], forbiddenNear:['food','greenhouse'], desc:'Far from Food & Greenhouse; connected to Hub.' }
+    ];
+
+    const REQUIRED = MODULES.map(m => m.id);
+    const placements = {};
+    const modulesContainer = document.getElementById('modules');
+    const logEl = document.getElementById('log');
+    const placedList = document.getElementById('placedList');
+    const resultBox = document.getElementById('resultBox');
+
+    const zoneElements = {
+      airlockZone: document.getElementById('airlockZone'),
+      crewZone1: document.getElementById('crewZone1'),
+      coreZone: document.getElementById('coreZone'),
+      crewZone2: document.getElementById('crewZone2'),
+      outerZone: document.getElementById('outerZone')
+    };
+
+    function zoneCenter(id){
+      const el = zoneElements[id];
+      const x = parseFloat(el.getAttribute('x')), y = parseFloat(el.getAttribute('y'));
+      const w = parseFloat(el.getAttribute('width')), h = parseFloat(el.getAttribute('height'));
+      return { x: x + w/2, y: y + h/2 };
+    }
+
+    MODULES.forEach(m=>{
+      const div = document.createElement('div');
+      div.className = 'module';
+      div.draggable = true;
+      div.id = 'mod-'+m.id;
+      div.innerHTML = `<div style="flex:1"><div style="font-weight:700">${m.name}</div><div class="muted" style="font-size:12px">${m.desc}</div></div>`;
+      div.addEventListener('dragstart', e=>{ e.dataTransfer.setData('text/plain', m.id); e.dataTransfer.effectAllowed='move'; });
+      modulesContainer.appendChild(div);
+    });
+
+    Object.entries(zoneElements).forEach(([zoneId, el])=>{
+      el.addEventListener('dragover', e=>{ e.preventDefault(); el.classList.add('hover'); });
+      el.addEventListener('dragleave', e=>{ el.classList.remove('hover'); });
+      el.addEventListener('drop', e=>{
+        e.preventDefault(); el.classList.remove('hover');
+        const mid = e.dataTransfer.getData('text/plain');
+        if(!mid) return;
+        placeModule(mid, zoneId);
+      });
+    });
+
+    function log(msg,type='info'){
+      const p=document.createElement('div'); p.textContent='· '+msg; p.style.marginBottom='6px';
+      if(type==='bad') p.style.color='#ffb4b4';
+      if(type==='warn') p.style.color='#ffd6a5';
+      logEl.prepend(p);
+    }
+
+    function updatePlacedList(){
+      placedList.innerHTML='';
+      for(const [mid,zone] of Object.entries(placements)){
+        const m = MODULES.find(x=>x.id===mid);
+        const d = document.createElement('div');
+        d.className='module small'; d.textContent=`${m.name} — ${zone}`;
+        placedList.appendChild(d);
+      }
+      if(Object.keys(placements).length===0) placedList.textContent='No modules placed yet.';
+    }
+
+    function placeModule(moduleId, zone){
+      const mod = MODULES.find(m=>m.id===moduleId); if(!mod) return;
+      if(!mod.allowed.includes(zone)){
+        log(`${mod.name} is not usually placed in ${zone.toUpperCase()} (allowed: ${mod.allowed.join(', ')})`, 'warn');
+        resultBox.className='result bad';
+        resultBox.textContent=`${mod.name} possibly wrongly placed in ${zone}.`;
+      }
+      placements[moduleId]=zone;
+      log(`${mod.name} placed in ${zone.toUpperCase()}`);
+      renderPlacements();
+      updatePlacedList();
+    }
+
+    function renderPlacements(){
+      const svg=document.getElementById('habitatSvg');
+      [...svg.querySelectorAll('[data-placed]')].forEach(n=>n.remove());
+      const counts={ airlockZone:0, crewZone1:0, coreZone:0, crewZone2:0, outerZone:0 };
+      for(const [mid,zone] of Object.entries(placements)){
+        counts[zone]=(counts[zone]||0)+1;
+        const center=zoneCenter(zone);
+        const angle=(counts[zone]*48)*Math.PI/180;
+        const r=28+(Math.floor(counts[zone]/6)*10);
+        const x=center.x+Math.cos(angle)*r-18;
+        const y=center.y+Math.sin(angle)*r-18;
+        const g=document.createElementNS('http://www.w3.org/2000/svg','g');
+        g.setAttribute('transform',`translate(${x},${y})`);
+        g.setAttribute('data-placed',mid);
+        const rect=document.createElementNS('http://www.w3.org/2000/svg','rect');
+        rect.setAttribute('width',36); rect.setAttribute('height',36); rect.setAttribute('rx',8); rect.setAttribute('ry',8);
+        rect.setAttribute('fill','#60a5fa'); rect.setAttribute('stroke','rgba(2,6,23,0.6)');
+        const txt=document.createElementNS('http://www.w3.org/2000/svg','text');
+        txt.setAttribute('x',18); txt.setAttribute('y',22); txt.setAttribute('text-anchor','middle'); txt.setAttribute('font-size',10); txt.setAttribute('fill','#041124');
+        txt.textContent=mid.slice(0,3).toUpperCase();
+        g.appendChild(rect); g.appendChild(txt);
+        svg.appendChild(g);
+        g.style.cursor='pointer';
+        g.addEventListener('click',()=>{ delete placements[mid]; log(`${MODULES.find(m=>m.id===mid).name} removed.`); renderPlacements(); updatePlacedList(); });
+      }
+    }
+
+    document.getElementById('resetBtn').addEventListener('click',()=>{
+      for(const k of Object.keys(placements)) delete placements[k];
+      renderPlacements(); updatePlacedList(); log('Level reset.');
+      resultBox.className='result'; resultBox.textContent='Not checked yet.';
+    });
+
+    document.getElementById('checkBtn').addEventListener('click',()=>{
+      const outcome=evaluateLevel();
+      if(outcome.ok){ resultBox.className='result good';
+        resultBox.innerHTML=`<strong>Lava Tube Base stabilized! ✅</strong><div style="font-size:13px;margin-top:6px">All modules correctly placed.`; log('Level passed!'); }
+      else{ resultBox.className='result bad'; resultBox.innerHTML=`<strong>Issues detected ❌</strong><div style="font-size:13px;margin-top:6px">${outcome.msgs.join('<br>')}</div>`; }
+    });
+
+    function evaluateLevel(){
+      const msgs=[]; let ok=true;
+      const missing = REQUIRED.filter(id=>!placements[id]);
+      if(missing.length){ ok=false; msgs.push(`Missing modules: ${missing.join(', ')}.`); }
+      for(const [mid,zone] of Object.entries(placements)){
+        const mod=MODULES.find(m=>m.id===mid);
+        if(!mod.allowed.includes(zone)){ ok=false; msgs.push(`${mod.name} wrongly placed in ${zone}.`); }
+      }
+      // Simple forbidden-near check
+      for(const [mid,zone] of Object.entries(placements)){
+        const mod=MODULES.find(m=>m.id===mid);
+        if(!mod.forbiddenNear) continue;
+        mod.forbiddenNear.forEach(f=>{
+          if(Object.entries(placements).some(([otherId,otherZone])=>otherId!==mid && otherId===f && otherZone===zone)){
+            ok=false; msgs.push(`${mod.name} cannot be near ${f}.`);
+          }
+        });
+      }
+      return { ok, msgs };
+    }
+
+    document.getElementById('hintBtn').addEventListener('click',()=>{
+      alert('Hints:\n- Airlock → Hub\n- Hub central\n- Living Pods along walls\n- Medical near Hub\n- Food near Greenhouse\n- Waste isolated');
+    });
+    document.getElementById('completionTextBtn').addEventListener('click',()=>{
+      alert('Congrats! Level 5: Lava Tube Base fully stabilized with all modules correctly placed.');
+    });
+
+    updatePlacedList();
+  </script>
+</body>
+</html>
+
+

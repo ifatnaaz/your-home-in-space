@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Mars Cylinder Habitat — Level 1</title>
+<style>
+:root{--bg:#0b0f1f;--card:#101728;--accent:#fbbf24;--muted:#94a3b8;--good:#10b981;--bad:#ef4444}
+html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;color:#e6eef8;background:linear-gradient(180deg,#040511 0%,#08122a 60%);}
+.app{display:grid;grid-template-columns:320px 1fr 340px;gap:18px;padding:20px;height:100vh;box-sizing:border-box}
+
+/* LEFT SIDEBAR */
+.sidebar{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:16px;border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,0.6);overflow:auto}
+.sidebar h2{margin:0 0 12px 0;font-size:18px}
+.module{background:rgba(255,255,255,0.03);padding:10px;border-radius:8px;margin-bottom:10px;display:flex;align-items:center;gap:10px;cursor:grab;border:1px dashed rgba(255,255,255,0.03)}
+.module:active{cursor:grabbing}
+.module .tag{font-size:13px;padding:6px 8px;border-radius:6px;background:rgba(255,255,255,0.03)}
+.muted{color:var(--muted);font-size:13px}
+
+/* CENTER: HABITAT */
+.stage{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+.viewport{width:760px;height:560px;background:radial-gradient(circle at 20% 15%, rgba(251,191,36,0.04), transparent 10%), linear-gradient(180deg,#08122a,#021020);border-radius:14px;padding:18px;box-shadow:0 12px 30px rgba(2,6,23,0.6);position:relative;display:flex;align-items:center;justify-content:center}
+.hud{position:absolute;left:18px;top:18px;color:var(--muted);font-size:13px}
+.hud .rules{max-width:300px}
+
+/* RIGHT: INFO PANEL */
+.info{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:16px;border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,0.6);display:flex;flex-direction:column;gap:10px}
+.info h3{margin:0}
+.log{background:rgba(0,0,0,0.2);padding:10px;border-radius:8px;height:220px;overflow:auto;color:#d7e7ff}
+.status{display:flex;gap:10px;flex-wrap:wrap}
+.pill{padding:8px 10px;border-radius:999px;background:rgba(255,255,255,0.03);font-size:13px}
+
+/* dropzone visuals */
+.dropzone{stroke:rgba(255,255,255,0.06);fill:transparent;cursor:pointer}
+.dropzone.hover{stroke:rgba(251,191,36,0.9);fill:rgba(251,191,36,0.04)}
+
+.placed{font-size:13px;margin-top:6px;color:#dbeafe}
+.module.small{font-size:13px;padding:6px}
+
+.result{padding:10px;border-radius:8px}
+.good{background:linear-gradient(90deg, rgba(16,185,129,0.12), rgba(16,185,129,0.04));border:1px solid rgba(16,185,129,0.12);color:var(--good)}
+.bad{background:linear-gradient(90deg, rgba(239,68,68,0.06), rgba(239,68,68,0.02));border:1px solid rgba(239,68,68,0.06);color:var(--bad)}
+
+.btn{padding:8px 12px;border-radius:8px;background:var(--accent);border:none;color:#041124;font-weight:600;cursor:pointer}
+.btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:#cfe8ff}
+
+@media (max-width:1100px){.app{grid-template-columns:240px 1fr;grid-auto-rows:1fr} .info{display:none}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+<h2>Pods — drag to place</h2>
+<div id="modules"></div>
+<div style="margin-top:12px" class="muted">Tip: drag pods to correct zones (Mars Level 1 rules).</div>
+</aside>
+
+<main class="stage">
+<div class="viewport">
+<div class="hud">
+<div><strong>Mars Cylinder Habitat — Level 1</strong></div>
+<div class="rules muted">Linear cylinder: Core (Life Support, Power, Comm), Crew (Sleep, Food, Medical, Exercise), Outer (Thermal, Waste, Stowage). Airlock first, Waste isolated.</div>
+</div>
+<svg id="habitatSvg" width="620" height="520" viewBox="0 0 620 520" xmlns="http://www.w3.org/2000/svg">
+<circle id="airlock" class="dropzone" cx="310" cy="40" r="40"/>
+<circle id="lifeSupport" class="dropzone" cx="310" cy="200" r="50"/>
+<circle id="power" class="dropzone" cx="200" cy="200" r="35"/>
+<circle id="comm" class="dropzone" cx="420" cy="200" r="35"/>
+<circle id="sleep" class="dropzone" cx="240" cy="300" r="30"/>
+<circle id="foodPrep" class="dropzone" cx="380" cy="300" r="30"/>
+<circle id="medical" class="dropzone" cx="310" cy="350" r="30"/>
+<circle id="exercise" class="dropzone" cx="310" cy="420" r="30"/>
+<circle id="thermal" class="dropzone" cx="120" cy="200" r="25"/>
+<circle id="waste" class="dropzone" cx="500" cy="200" r="25"/>
+<circle id="stowage" class="dropzone" cx="310" cy="500" r="25"/>
+</svg>
+</div>
+<div style="width:760px;display:flex;justify-content:space-between;align-items:center">
+<div class="status">
+<div class="pill">Goal: Place all pods correctly & connected</div>
+<div class="pill">Constraints: Airlock first; Waste isolated from Food & Crew Zone</div>
+</div>
+<div style="display:flex;gap:8px">
+<button class="btn" id="checkBtn">Check Level</button>
+<button class="btn ghost" id="resetBtn">Reset</button>
+</div>
+</div>
+</main>
+
+<aside class="info">
+<h3>Placement Log</h3>
+<div class="log" id="log"></div>
+<h3>Pod Status</h3>
+<div id="placedList" class="placed"></div>
+<h3>Level Result</h3>
+<div id="resultBox" class="result">Not checked yet.</div>
+<div style="display:flex;gap:8px;margin-top:8px">
+<button class="btn ghost" id="hintBtn">Show Placement Hints</button>
+<button class="btn" id="completionTextBtn">Show Completion Text</button>
+</div>
+</aside>
+</div>
+
+<script>
+const PODS=[
+{id:'airlock',name:'Airlock',allowed:['airlock'],required:true,connectsTo:['lifeSupport']},
+{id:'lifeSupport',name:'Life Support Core',allowed:['lifeSupport'],required:true,connectsTo:['airlock','power','comm','waste','foodPrep','medical']},
+{id:'power',name:'Power Zone',allowed:['power'],required:true,connectsTo:['lifeSupport']},
+{id:'comm',name:'Communications',allowed:['comm'],required:true,connectsTo:['lifeSupport']},
+{id:'sleep',name:'Sleeping Pods',allowed:['sleep'],required:true,connectsTo:['medical','foodPrep']},
+{id:'foodPrep',name:'Food Storage & Prep',allowed:['foodPrep'],required:true,connectsTo:['lifeSupport','sleep']},
+{id:'medical',name:'Medical Station',allowed:['medical'],required:true,connectsTo:['lifeSupport','exercise']},
+{id:'exercise',name:'Exercise Corner',allowed:['exercise'],required:true,connectsTo:['medical']},
+{id:'thermal',name:'Thermal Control',allowed:['thermal'],required:true,connectsTo:['lifeSupport']},
+{id:'waste',name:'Waste Management',allowed:['waste'],required:true,connectsTo:['lifeSupport']},
+{id:'stowage',name:'Stowage & Cargo',allowed:['stowage'],required:true,connectsTo:['lifeSupport']}
+];
+
+const REQUIRED=PODS.map(p=>p.id);
+const placements={};
+const modulesContainer=document.getElementById('modules');
+const logEl=document.getElementById('log');
+const placedList=document.getElementById('placedList');
+const resultBox=document.getElementById('resultBox');
+const zoneElements=PODS.reduce((obj,p)=>{obj[p.id]=document.getElementById(p.id);return obj;},{});
+
+PODS.forEach(p=>{
+const div=document.createElement('div');
+div.className='module'; div.draggable=true; div.id='mod-'+p.id;
+div.innerHTML=`<div style="flex:1"><strong>${p.name}</strong></div>`;
+div.addEventListener('dragstart',e=>e.dataTransfer.setData('text/plain',p.id));
+modulesContainer.appendChild(div);
+});
+
+Object.entries(zoneElements).forEach(([zone,el])=>{
+el.addEventListener('dragover',e=>{e.preventDefault(); el.classList.add('hover');});
+el.addEventListener('dragleave',e=>{el.classList.remove('hover');});
+el.addEventListener('drop',e=>{
+e.preventDefault(); el.classList.remove('hover');
+const podId=e.dataTransfer.getData('text/plain');
+if(!podId)return;
+placePod(podId,zone);
+});
+});
+
+function log(msg){const p=document.createElement('div');p.textContent='· '+msg; logEl.prepend(p);}
+function updatePlacedList(){placedList.innerHTML='';for(const [pid,zone] of Object.entries(placements)){const pod=PODS.find(p=>p.id===pid);const d=document.createElement('div');d.className='module small';d.textContent=`${pod.name} — ${zone}`;placedList.appendChild(d);}if(!Object.keys(placements).length) placedList.textContent='No pods placed yet.';}
+function placePod(pid,zone){placements[pid]=zone;log(`${PODS.find(p=>p.id===pid).name} placed in ${zone}`);renderPlacements();updatePlacedList();}
+
+function renderPlacements(){
+const svg=document.getElementById('habitatSvg');
+[...svg.querySelectorAll('[data-placed]')].forEach(n=>n.remove());
+for(const [pid,zone] of Object.entries(placements)){
+const el=zoneElements[zone];
+const g=document.createElementNS('http://www.w3.org/2000/svg','g');
+const cx=el.cx.baseVal.value, cy=el.cy.baseVal.value, r=el.r.baseVal.value;
+g.setAttribute('transform',`translate(${cx-r/2},${cy-r/2})`);
+g.setAttribute('data-placed',pid);
+const circle=document.createElementNS('http://www.w3.org/2000/svg','circle'); circle.setAttribute('cx',r/2); circle.setAttribute('cy',r/2); circle.setAttribute('r',r/2); circle.setAttribute('fill','#fbbf24');
+const text=document.createElementNS('http://www.w3.org/2000/svg','text'); text.setAttribute('x',r/2); text.setAttribute('y',r/2+4); text.setAttribute('text-anchor','middle'); text.setAttribute('font-size',10); text.setAttribute('fill','#041124'); text.textContent=pid.toUpperCase();
+g.appendChild(circle); g.appendChild(text); svg.appendChild(g);
+g.addEventListener('click',()=>{delete placements[pid];log(`${PODS.find(p=>p.id===pid).name} removed.`);renderPlacements();updatePlacedList();});
+}
+}
+
+document.getElementById('resetBtn').addEventListener('click',()=>{
+for(const k of Object.keys(placements)) delete placements[k];
+renderPlacements(); updatePlacedList(); log('Level reset.'); resultBox.className='result'; resultBox.textContent='Not checked yet.';
+});
+
+document.getElementById('checkBtn').addEventListener('click',()=>{
+const check=evaluateLevel();
+if(check.ok){ resultBox.className='result good'; resultBox.textContent='✅ Mars Cylinder Habitat stabilized!'; log('Level PASSED.');}
+else{ resultBox.className='result bad'; resultBox.textContent='⚠ Placement issues: '+check.messages.join('; '); log('Level FAILED');}
+});
+
+document.getElementById('hintBtn').addEventListener('click',()=>{alert('Hints:\n'+PODS.map(p=>`• ${p.name}: allowed in ${p.allowed.join(', ')}`).join('\n'));});
+
+document.getElementById('completionTextBtn').addEventListener('click',()=>{
+alert(`Mars Cylinder Habitat operational! All pods correctly placed → astronauts survive initial missions (30-60 days). 
+• Thermal Control: 22 °C interior
+• Life Support: 21% O₂, 101 kPa, CO₂ scrubbed, water recycled
+• Power: Solar + battery backup → continuous supply during Martian night (12.3 hrs)
+• Waste: Isolated, ventable
+• Food & Water: Properly stored
+• Sleeping Pods: Circadian rhythm maintained
+• Exercise Zone: Maintains bone/muscle in 0.38 g
+• Medical Pod: Central emergency response
+• Communications: Earth contact maintained
+Result: Crew can survive initial Mars missions safely.`);
+});
+
+function evaluateLevel(){
+let messages=[]; let ok=true;
+const missing=REQUIRED.filter(r=>!placements[r]); if(missing.length){ok=false;messages.push(`Missing pods: ${missing.join(', ')}`);}
+
+// Airlock must be first
+if(placements['airlock'] && !placements['lifeSupport']){
+ok=false; messages.push('Airlock must connect to Life Support Core first.');
+}
+
+// Check connections
+for(const pid in placements){
+const pod=PODS.find(p=>p.id===pid);
+for(const conn of pod.connectsTo){
+if(!placements[conn]){
+ok=false;
+messages.push(`${pod.name} not connected to ${PODS.find(p=>p.id===conn).name}`);
+}
+}
+}
+
+// Waste isolation
+if(placements['waste'] && placements['foodPrep']){
+const w=zoneElements['waste'], f=zoneElements['foodPrep'];
+if(Math.abs(w.cx.baseVal.value - f.cx.baseVal.value)<50){ok=false;messages.push('Waste & Food Pods too close!');}
+}
+if(placements['waste'] && placements['sleep']){
+const w=zoneElements['waste'], s=zoneElements['sleep'];
+if(Math.abs(w.cx.baseVal.value - s.cx.baseVal.value)<50){ok=false;messages.push('Waste too close to Sleeping Pods!');}
+}
+
+return {ok,messages};
+}
+
+renderPlacements(); updatePlacedList(); log('Mars Level 1 loaded. Drag pods into correct zones.');
+</script>
+</body>
+</html>
